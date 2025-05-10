@@ -361,6 +361,40 @@
       "value": "Close login form"
     }
   ],
+  "auth_modal.check_email.button.resend_link": [
+    {
+      "type": 0,
+      "value": "Resend Link"
+    }
+  ],
+  "auth_modal.check_email.description.check_spam_folder": [
+    {
+      "type": 0,
+      "value": "The link may take a few minutes to arrive, check your spam folder if you're having trouble finding it"
+    }
+  ],
+  "auth_modal.check_email.description.just_sent": [
+    {
+      "type": 0,
+      "value": "We just sent a login link to "
+    },
+    {
+      "children": [
+        {
+          "type": 1,
+          "value": "email"
+        }
+      ],
+      "type": 8,
+      "value": "b"
+    }
+  ],
+  "auth_modal.check_email.title.check_your_email": [
+    {
+      "type": 0,
+      "value": "Check Your Email"
+    }
+  ],
   "auth_modal.description.now_signed_in": [
     {
       "type": 0,
@@ -431,10 +465,14 @@
       "value": "Scroll carousel right"
     }
   ],
-  "cart.info.removed_from_cart": [
+  "cart.product_edit_modal.modal_label": [
     {
       "type": 0,
-      "value": "Item removed from cart"
+      "value": "Edit modal for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
     }
   ],
   "cart.recommended_products.title.may_also_like": [
@@ -921,12 +959,6 @@
       "value": "No, keep item"
     }
   ],
-  "confirmation_modal.remove_cart_item.action.remove": [
-    {
-      "type": 0,
-      "value": "Remove"
-    }
-  ],
   "confirmation_modal.remove_cart_item.action.yes": [
     {
       "type": 0,
@@ -939,22 +971,10 @@
       "value": "No, keep item"
     }
   ],
-  "confirmation_modal.remove_cart_item.assistive_msg.remove": [
-    {
-      "type": 0,
-      "value": "Remove unavailable products"
-    }
-  ],
   "confirmation_modal.remove_cart_item.assistive_msg.yes": [
     {
       "type": 0,
       "value": "Yes, remove item"
-    }
-  ],
-  "confirmation_modal.remove_cart_item.message.need_to_remove_due_to_unavailability": [
-    {
-      "type": 0,
-      "value": "Some items are no longer available online and will be removed from your cart."
     }
   ],
   "confirmation_modal.remove_cart_item.message.sure_to_remove": [
@@ -967,12 +987,6 @@
     {
       "type": 0,
       "value": "Confirm Remove Item"
-    }
-  ],
-  "confirmation_modal.remove_cart_item.title.items_unavailable": [
-    {
-      "type": 0,
-      "value": "Items Unavailable"
     }
   ],
   "confirmation_modal.remove_wishlist_item.action.no": [
@@ -1011,6 +1025,12 @@
       "value": "Already have an account? Log in"
     }
   ],
+  "contact_info.button.back_to_sign_in_options": [
+    {
+      "type": 0,
+      "value": "Back to Sign In Options"
+    }
+  ],
   "contact_info.button.checkout_as_guest": [
     {
       "type": 0,
@@ -1023,6 +1043,18 @@
       "value": "Log In"
     }
   ],
+  "contact_info.button.password": [
+    {
+      "type": 0,
+      "value": "Password"
+    }
+  ],
+  "contact_info.button.secure_link": [
+    {
+      "type": 0,
+      "value": "Secure Link"
+    }
+  ],
   "contact_info.error.incorrect_username_or_password": [
     {
       "type": 0,
@@ -1033,6 +1065,12 @@
     {
       "type": 0,
       "value": "Forgot password?"
+    }
+  ],
+  "contact_info.message.or_login_with": [
+    {
+      "type": 0,
+      "value": "Or Login With"
     }
   ],
   "contact_info.title.contact_info": [
@@ -1109,6 +1147,48 @@
       "value": "currentPrice"
     }
   ],
+  "dnt_notification.button.accept": [
+    {
+      "type": 0,
+      "value": "Accept"
+    }
+  ],
+  "dnt_notification.button.assistive_msg.accept": [
+    {
+      "type": 0,
+      "value": "Accept tracking"
+    }
+  ],
+  "dnt_notification.button.assistive_msg.close": [
+    {
+      "type": 0,
+      "value": "Close consent tracking form"
+    }
+  ],
+  "dnt_notification.button.assistive_msg.decline": [
+    {
+      "type": 0,
+      "value": "Decline tracking"
+    }
+  ],
+  "dnt_notification.button.decline": [
+    {
+      "type": 0,
+      "value": "Decline"
+    }
+  ],
+  "dnt_notification.description": [
+    {
+      "type": 0,
+      "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+    }
+  ],
+  "dnt_notification.title": [
+    {
+      "type": 0,
+      "value": "Tracking Consent"
+    }
+  ],
   "drawer_menu.button.account_details": [
     {
       "type": 0,
@@ -1137,6 +1217,12 @@
     {
       "type": 0,
       "value": "Order History"
+    }
+  ],
+  "drawer_menu.header.assistive_msg.title": [
+    {
+      "type": 0,
+      "value": "Menu Drawer"
     }
   ],
   "drawer_menu.link.about_us": [
@@ -1453,68 +1539,6 @@
       "value": "Wishlist"
     }
   ],
-  "global.error.something_went_wrong": [
-    {
-      "type": 0,
-      "value": "Something went wrong. Try again!"
-    }
-  ],
-  "global.info.added_to_wishlist": [
-    {
-      "type": 1,
-      "value": "quantity"
-    },
-    {
-      "type": 0,
-      "value": " "
-    },
-    {
-      "offset": 0,
-      "options": {
-        "one": {
-          "value": [
-            {
-              "type": 0,
-              "value": "item"
-            }
-          ]
-        },
-        "other": {
-          "value": [
-            {
-              "type": 0,
-              "value": "items"
-            }
-          ]
-        }
-      },
-      "pluralType": "cardinal",
-      "type": 6,
-      "value": "quantity"
-    },
-    {
-      "type": 0,
-      "value": " added to wishlist"
-    }
-  ],
-  "global.info.already_in_wishlist": [
-    {
-      "type": 0,
-      "value": "Item is already in wishlist"
-    }
-  ],
-  "global.info.removed_from_wishlist": [
-    {
-      "type": 0,
-      "value": "Item removed from wishlist"
-    }
-  ],
-  "global.link.added_to_wishlist.view_wishlist": [
-    {
-      "type": 0,
-      "value": "View"
-    }
-  ],
   "header.button.assistive_msg.logo": [
     {
       "type": 0,
@@ -1536,7 +1560,7 @@
   "header.button.assistive_msg.my_account": [
     {
       "type": 0,
-      "value": "My account"
+      "value": "My Account"
     }
   ],
   "header.button.assistive_msg.my_account_menu": [
@@ -1583,24 +1607,6 @@
     {
       "type": 0,
       "value": "My Account"
-    }
-  ],
-  "home.description.features": [
-    {
-      "type": 0,
-      "value": "Out-of-the-box features so that you focus only on adding enhancements."
-    }
-  ],
-  "home.description.here_to_help": [
-    {
-      "type": 0,
-      "value": "Contact our support staff."
-    }
-  ],
-  "home.description.here_to_help_line_2": [
-    {
-      "type": 0,
-      "value": "They will get you to the right place."
     }
   ],
   "home.description.shop_products": [
@@ -1689,18 +1695,6 @@
       "value": "Wishlist"
     }
   ],
-  "home.heading.features": [
-    {
-      "type": 0,
-      "value": "Features"
-    }
-  ],
-  "home.heading.here_to_help": [
-    {
-      "type": 0,
-      "value": "We're here to help"
-    }
-  ],
   "home.heading.shop_products": [
     {
       "type": 0,
@@ -1725,12 +1719,6 @@
       "value": "Deploy on Managed Runtime"
     }
   ],
-  "home.link.contact_us": [
-    {
-      "type": 0,
-      "value": "Contact Us"
-    }
-  ],
   "home.link.get_started": [
     {
       "type": 0,
@@ -1741,12 +1729,6 @@
     {
       "type": 0,
       "value": "Read docs"
-    }
-  ],
-  "home.title.react_starter_store": [
-    {
-      "type": 0,
-      "value": "The React PWA Starter Store for Retail"
     }
   ],
   "icons.assistive_msg.lock": [
@@ -1793,6 +1775,24 @@
     {
       "type": 0,
       "value": "Quantity "
+    },
+    {
+      "type": 1,
+      "value": "quantity"
+    }
+  ],
+  "item_variant.quantity.label": [
+    {
+      "type": 0,
+      "value": "Quantity selector for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
+    },
+    {
+      "type": 0,
+      "value": ". Selected quantity is "
     },
     {
       "type": 1,
@@ -2135,6 +2135,36 @@
       "value": "Create account"
     }
   ],
+  "login_form.button.apple": [
+    {
+      "type": 0,
+      "value": "Apple"
+    }
+  ],
+  "login_form.button.back": [
+    {
+      "type": 0,
+      "value": "Back to Sign In Options"
+    }
+  ],
+  "login_form.button.continue_securely": [
+    {
+      "type": 0,
+      "value": "Continue Securely"
+    }
+  ],
+  "login_form.button.google": [
+    {
+      "type": 0,
+      "value": "Google"
+    }
+  ],
+  "login_form.button.password": [
+    {
+      "type": 0,
+      "value": "Password"
+    }
+  ],
   "login_form.button.sign_in": [
     {
       "type": 0,
@@ -2151,6 +2181,12 @@
     {
       "type": 0,
       "value": "Don't have an account?"
+    }
+  ],
+  "login_form.message.or_login_with": [
+    {
+      "type": 0,
+      "value": "Or Login With"
     }
   ],
   "login_form.message.welcome_back": [
@@ -2387,6 +2423,12 @@
       "value": "1 uppercase letter"
     }
   ],
+  "password_reset_success.toast": [
+    {
+      "type": 0,
+      "value": "Password Reset Success"
+    }
+  ],
   "payment_selection.heading.credit_card": [
     {
       "type": 0,
@@ -2621,18 +2663,6 @@
       "value": " from wishlist"
     }
   ],
-  "product_tile.badge.label.new": [
-    {
-      "type": 0,
-      "value": "New"
-    }
-  ],
-  "product_tile.badge.label.sale": [
-    {
-      "type": 0,
-      "value": "Sale"
-    }
-  ],
   "product_view.button.add_bundle_to_cart": [
     {
       "type": 0,
@@ -2678,13 +2708,21 @@
   "product_view.label.assistive_msg.quantity_decrement": [
     {
       "type": 0,
-      "value": "Decrement Quantity"
+      "value": "Decrement Quantity for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
     }
   ],
   "product_view.label.assistive_msg.quantity_increment": [
     {
       "type": 0,
-      "value": "Increment Quantity"
+      "value": "Increment Quantity for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
     }
   ],
   "product_view.label.quantity": [
@@ -2751,6 +2789,12 @@
     {
       "type": 0,
       "value": "My Profile"
+    }
+  ],
+  "profile_fields.label.profile_form": [
+    {
+      "type": 0,
+      "value": "Profile Form"
     }
   ],
   "promo_code_fields.button.apply": [
@@ -2849,38 +2893,6 @@
       "value": "Create an account and get first access to the very best products, inspiration and community."
     }
   ],
-  "reset_password.button.back_to_sign_in": [
-    {
-      "type": 0,
-      "value": "Back to Sign In"
-    }
-  ],
-  "reset_password.info.receive_email_shortly": [
-    {
-      "type": 0,
-      "value": "You will receive an email at "
-    },
-    {
-      "children": [
-        {
-          "type": 1,
-          "value": "email"
-        }
-      ],
-      "type": 8,
-      "value": "b"
-    },
-    {
-      "type": 0,
-      "value": " with a link to reset your password shortly."
-    }
-  ],
-  "reset_password.title.password_reset": [
-    {
-      "type": 0,
-      "value": "Password Reset"
-    }
-  ],
   "reset_password_form.action.sign_in": [
     {
       "type": 0,
@@ -2933,6 +2945,26 @@
     {
       "type": 0,
       "value": "Continue to Shipping Method"
+    }
+  ],
+  "shipping_address.label.edit_button": [
+    {
+      "type": 0,
+      "value": "Edit "
+    },
+    {
+      "type": 1,
+      "value": "address"
+    }
+  ],
+  "shipping_address.label.remove_button": [
+    {
+      "type": 0,
+      "value": "Remove "
+    },
+    {
+      "type": 1,
+      "value": "address"
     }
   ],
   "shipping_address.label.shipping_address_form": [
@@ -3031,6 +3063,32 @@
       "value": "Are you sure you want to sign out? You will need to sign back in to proceed with your current order."
     }
   ],
+  "social_login_redirect.message.authenticating": [
+    {
+      "type": 0,
+      "value": "Authenticating..."
+    }
+  ],
+  "social_login_redirect.message.redirect_link": [
+    {
+      "type": 0,
+      "value": "If you are not automatically redirected, click "
+    },
+    {
+      "children": [
+        {
+          "type": 0,
+          "value": "this link"
+        }
+      ],
+      "type": 8,
+      "value": "link"
+    },
+    {
+      "type": 0,
+      "value": " to proceed."
+    }
+  ],
   "store_locator.action.find": [
     {
       "type": 0,
@@ -3115,18 +3173,6 @@
     {
       "type": 0,
       "value": "Viewing stores near your location"
-    }
-  ],
-  "store_locator.dropdown.germany": [
-    {
-      "type": 0,
-      "value": "Germany"
-    }
-  ],
-  "store_locator.dropdown.united_states": [
-    {
-      "type": 0,
-      "value": "United States"
     }
   ],
   "store_locator.error.agree_to_share_your_location": [
@@ -3731,6 +3777,34 @@
       "value": "New Password"
     }
   ],
+  "wishlist_primary_action.button.addSetToCart.label": [
+    {
+      "type": 0,
+      "value": "Add "
+    },
+    {
+      "type": 1,
+      "value": "productName"
+    },
+    {
+      "type": 0,
+      "value": " set to cart"
+    }
+  ],
+  "wishlist_primary_action.button.addToCart.label": [
+    {
+      "type": 0,
+      "value": "Add "
+    },
+    {
+      "type": 1,
+      "value": "productName"
+    },
+    {
+      "type": 0,
+      "value": " to cart"
+    }
+  ],
   "wishlist_primary_action.button.add_set_to_cart": [
     {
       "type": 0,
@@ -3743,6 +3817,16 @@
       "value": "Add to Cart"
     }
   ],
+  "wishlist_primary_action.button.viewFullDetails.label": [
+    {
+      "type": 0,
+      "value": "View full details for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
+    }
+  ],
   "wishlist_primary_action.button.view_full_details": [
     {
       "type": 0,
@@ -3753,6 +3837,16 @@
     {
       "type": 0,
       "value": "View Options"
+    }
+  ],
+  "wishlist_primary_action.button.view_options.label": [
+    {
+      "type": 0,
+      "value": "View Options for "
+    },
+    {
+      "type": 1,
+      "value": "productName"
     }
   ],
   "wishlist_primary_action.info.added_to_cart": [
@@ -3797,6 +3891,16 @@
     {
       "type": 0,
       "value": "Remove"
+    }
+  ],
+  "wishlist_secondary_button_group.info.item.remove.label": [
+    {
+      "type": 0,
+      "value": "Remove "
+    },
+    {
+      "type": 1,
+      "value": "productName"
     }
   ],
   "wishlist_secondary_button_group.info.item_removed": [

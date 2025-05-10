@@ -1,49 +1,47 @@
-:loudspeaker: Hey there, Salesforce Commerce Cloud community!
+# PWA Kit Generated App
 
-We’re excited to hear your thoughts on your developer experience with PWA Kit and the Composable Storefront generally! Your feedback is incredibly valuable in helping us guide our roadmap and improve our offering.
+Welcome to the PWA Kit!
 
-:clipboard: Take our quick survey here: [Survey](https://forms.gle/bUZNxQ3QKUcrjhV18) 
+## Getting Started
 
-Feel free to share this survey link with your colleagues, partners, or anyone who has experience with PWA Kit. Your input will help us shape the future of our development tools.
+### Requirements
 
-Thank you for being a part of our community and for your continuous support! :raised_hands:
+-   Node 18 or later
+-   npm 9 or later
 
-# The Retail React App
-
-A project template that includes an isomorphic JavaScript storefront and [Progressive Web App](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) built using [React](https://reactjs.org/) and [Express](https://expressjs.com/). It uses a modern headless architecture that enables developers to decouple front-end code from back-end systems. It leverages popular open-source libraries in the React ecosystem, such as [Chakra UI](https://chakra-ui.com/) components, [Emotion](https://emotion.sh/docs/introduction) (CSS-in-JS), [Webpack](https://webpack.js.org/), and many more.
-
-Developers don’t have to worry about the underlying infrastructure, whether they’re developing their app locally, deploying it to a [Managed Runtime](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/mrt-overview.html) environment, or testing the app live.
-
-## Requirements
-
--   Node 16.11 or later
--   npm 8 or later
-
-## Get Started
-
-To start your web server for local development, run the following command in your project directory:
+### Run the Project Locally
 
 ```bash
 npm start
 ```
 
-Now that the development server is running, you can open a browser and preview your commerce app:
+This will open a browser and your storefront will be running on http://localhost:3000
 
--   Go to http://localhost:3000/
+### Deploy to Managed Runtime
 
-## Localization
+```
+npm run push -- -m "Message to help you recognize this bundle"
+```
 
-See the [Localization README.md](./translations/README.md) for important setup instructions for localization.
+**Note**: This command will push to the MRT project that matches the name field in `package.json`. To push to a different project, include the `-s` argument.
 
-## Configuration Files
+**Important**: Access to the [Runtime Admin](https://runtime.commercecloud.com/) application is required to deploy bundles. To learn more, read our guide to [Push and Deploy Bundles](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/pushing-and-deploying-bundles.html).
 
-The Retail React App's configuration files are located in the `app/config` folder. For more details, see [Configuration Files](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/configuration-options.html) in the documentation.
+## Customizing the application
 
-## Documentation
+This version of the application uses [Template Extensibility](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/template-extensibility.html) to empower you to more easily customize base templates. Please refer to our documentation for more information.
+
+## 🌍 Localization
+
+See the [Localization README.md](./packages/template-retail-react-app/translations/README.md) for important setup instructions for localization.
+
+## 📖 Documentation
 
 The full documentation for PWA Kit and Managed Runtime is hosted on the [Salesforce Developers](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/overview) portal.
 
-### Useful Links:
+## Further documentation
+
+For more information on working with the PWA Kit, refer to:
 
 -   [Get Started](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/getting-started.html)
 -   [Skills for Success](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/guide/skills-for-success.html)

@@ -8,19 +8,48 @@
 const sites = require('./sites.js')
 module.exports = {
     app: {
-        // Customize settings for your url
+        // Customize how your 'site' and 'locale' are displayed in the url.
         url: {
             // Determine where the siteRef is located. Valid values include 'path|query_param|none'. Defaults to: 'none'
             // site: 'none',
             // Determine where the localeRef is located. Valid values include 'path|query_param|none'. Defaults to: 'none'
-            locale: 'none',
-            // This boolean value dictates whether default site or locale values are shown in the url. Defaults to: false
-            // showDefaults: true,
-            // This boolean value dictates whether the plus sign (+) is interpreted as space for query param string. Defaults to: false
-            interpretPlusSignAsSpace: false
+            locale: 'none'
+            // This boolean value dictates whether or not default site or locale values are shown in the url. Defaults to: false
+            // showDefaults: true
+        },
+        login: {
+            passwordless: {
+                // Enables or disables passwordless login for the site. Defaults to: false
+                enabled: false,
+                // The callback URI, which can be an absolute URL (including third-party URIs) or a relative path set up by the developer.
+                // Required in 'callback' mode; if missing, passwordless login defaults to 'sms' mode, which requires Marketing Cloud configuration.
+                // If the env var `PASSWORDLESS_LOGIN_CALLBACK_URI` is set, it will override the config value.
+                callbackURI:
+                    process.env.PASSWORDLESS_LOGIN_CALLBACK_URI || '/passwordless-login-callback',
+                // The landing path for passwordless login
+                landingPath: '/passwordless-login-landing'
+            },
+            social: {
+                // Enables or disables social login for the site. Defaults to: false
+                enabled: false,
+                // The third-party identity providers supported by your app. The PWA Kit supports Google and Apple by default.
+                // Additional IDPs will also need to be added to the IDP_CONFIG in the SocialLogin component.
+                idps: ['google', 'apple'],
+                // The redirect URI used after a successful social login authentication.
+                // This should be a relative path set up by the developer.
+                // If the env var `SOCIAL_LOGIN_REDIRECT_URI` is set, it will override the config value.
+                redirectURI: process.env.SOCIAL_LOGIN_REDIRECT_URI || '/social-callback'
+            },
+            resetPassword: {
+                // The callback URI, which can be an absolute URL (including third-party URIs) or a relative path set up by the developer.
+                // If the env var `RESET_PASSWORD_CALLBACK_URI` is set, it will override the config value.
+                callbackURI: process.env.RESET_PASSWORD_CALLBACK_URI || '/reset-password-callback',
+                // The landing path for reset password
+                landingPath: '/reset-password-landing'
+            }
         },
         // The default site for your app. This value will be used when a siteRef could not be determined from the url
-        defaultSite: 'RefArch',
+        defaultSite: 'RefArchJ',
         // Provide aliases for your sites. These will be used in place of your site id when generating paths throughout the application.
         // siteAliases: {
         //     RefArch: 'us'
@@ -31,10 +60,10 @@ module.exports = {
         commerceAPI: {
             proxyPath: '/mobify/proxy/api',
             parameters: {
-                clientId: '6d17e164-4331-482a-908e-ff8d007f7782',
-                organizationId: 'f_ecom_zzab_001',
-                shortCode: 'kv7kzm78',
-                siteId: 'RefArch'
+                clientId: 'b6d89cf5-ed45-4c2b-a39c-d7ce93d99cc6',
+                organizationId: 'f_ecom_bkwp_prd',
+                shortCode: 'hzx11t3w',
+                siteId: 'RefArchJ'
             }
         },
         // Einstein api config
@@ -68,14 +97,14 @@ module.exports = {
     ],
     // Additional parameters that configure Express app behavior.
     ssrParameters: {
-        ssrFunctionNodeVersion: '20.x',
+        ssrFunctionNodeVersion: '22.x',
         proxyConfigs: [
             {
-                host: 'kv7kzm78.api.commercecloud.salesforce.com',
+                host: 'hzx11t3w.api.commercecloud.salesforce.com',
                 path: 'api'
             },
             {
-                host: 'zzab-001.dx.commercecloud.salesforce.com',
+                host: 'production-support02-dw.demandware.net',
                 path: 'ocapi'
             }
         ]

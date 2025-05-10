@@ -147,6 +147,18 @@
   "auth_modal.button.close.assistive_msg": {
     "defaultMessage": "Close login form"
   },
+  "auth_modal.check_email.button.resend_link": {
+    "defaultMessage": "Resend Link"
+  },
+  "auth_modal.check_email.description.check_spam_folder": {
+    "defaultMessage": "The link may take a few minutes to arrive, check your spam folder if you're having trouble finding it"
+  },
+  "auth_modal.check_email.description.just_sent": {
+    "defaultMessage": "We just sent a login link to <b>{email}</b>"
+  },
+  "auth_modal.check_email.title.check_your_email": {
+    "defaultMessage": "Check Your Email"
+  },
   "auth_modal.description.now_signed_in": {
     "defaultMessage": "You're now signed in."
   },
@@ -171,8 +183,8 @@
   "carousel.button.scroll_right.assistive_msg": {
     "defaultMessage": "Scroll carousel right"
   },
-  "cart.info.removed_from_cart": {
-    "defaultMessage": "Item removed from cart"
+  "cart.product_edit_modal.modal_label": {
+    "defaultMessage": "Edit modal for {productName}"
   },
   "cart.recommended_products.title.may_also_like": {
     "defaultMessage": "You May Also Like"
@@ -358,32 +370,20 @@
   "confirmation_modal.remove_cart_item.action.no": {
     "defaultMessage": "No, keep item"
   },
-  "confirmation_modal.remove_cart_item.action.remove": {
-    "defaultMessage": "Remove"
-  },
   "confirmation_modal.remove_cart_item.action.yes": {
     "defaultMessage": "Yes, remove item"
   },
   "confirmation_modal.remove_cart_item.assistive_msg.no": {
     "defaultMessage": "No, keep item"
   },
-  "confirmation_modal.remove_cart_item.assistive_msg.remove": {
-    "defaultMessage": "Remove unavailable products"
-  },
   "confirmation_modal.remove_cart_item.assistive_msg.yes": {
     "defaultMessage": "Yes, remove item"
-  },
-  "confirmation_modal.remove_cart_item.message.need_to_remove_due_to_unavailability": {
-    "defaultMessage": "Some items are no longer available online and will be removed from your cart."
   },
   "confirmation_modal.remove_cart_item.message.sure_to_remove": {
     "defaultMessage": "Are you sure you want to remove this item from your cart?"
   },
   "confirmation_modal.remove_cart_item.title.confirm_remove": {
     "defaultMessage": "Confirm Remove Item"
-  },
-  "confirmation_modal.remove_cart_item.title.items_unavailable": {
-    "defaultMessage": "Items Unavailable"
   },
   "confirmation_modal.remove_wishlist_item.action.no": {
     "defaultMessage": "No, keep item"
@@ -403,17 +403,29 @@
   "contact_info.button.already_have_account": {
     "defaultMessage": "Already have an account? Log in"
   },
+  "contact_info.button.back_to_sign_in_options": {
+    "defaultMessage": "Back to Sign In Options"
+  },
   "contact_info.button.checkout_as_guest": {
     "defaultMessage": "Checkout as Guest"
   },
   "contact_info.button.login": {
     "defaultMessage": "Log In"
   },
+  "contact_info.button.password": {
+    "defaultMessage": "Password"
+  },
+  "contact_info.button.secure_link": {
+    "defaultMessage": "Secure Link"
+  },
   "contact_info.error.incorrect_username_or_password": {
     "defaultMessage": "Incorrect username or password, please try again."
   },
   "contact_info.link.forgot_password": {
     "defaultMessage": "Forgot password?"
+  },
+  "contact_info.message.or_login_with": {
+    "defaultMessage": "Or Login With"
   },
   "contact_info.title.contact_info": {
     "defaultMessage": "Contact Info"
@@ -444,6 +456,27 @@
   "display_price.label.current_price_with_range": {
     "defaultMessage": "From {currentPrice}"
   },
+  "dnt_notification.button.accept": {
+    "defaultMessage": "Accept"
+  },
+  "dnt_notification.button.assistive_msg.accept": {
+    "defaultMessage": "Accept tracking"
+  },
+  "dnt_notification.button.assistive_msg.close": {
+    "defaultMessage": "Close consent tracking form"
+  },
+  "dnt_notification.button.assistive_msg.decline": {
+    "defaultMessage": "Decline tracking"
+  },
+  "dnt_notification.button.decline": {
+    "defaultMessage": "Decline"
+  },
+  "dnt_notification.description": {
+    "defaultMessage": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+  },
+  "dnt_notification.title": {
+    "defaultMessage": "Tracking Consent"
+  },
   "drawer_menu.button.account_details": {
     "defaultMessage": "Account Details"
   },
@@ -458,6 +491,9 @@
   },
   "drawer_menu.button.order_history": {
     "defaultMessage": "Order History"
+  },
+  "drawer_menu.header.assistive_msg.title": {
+    "defaultMessage": "Menu Drawer"
   },
   "drawer_menu.link.about_us": {
     "defaultMessage": "About Us"
@@ -600,21 +636,6 @@
   "global.account.link.wishlist": {
     "defaultMessage": "Wishlist"
   },
-  "global.error.something_went_wrong": {
-    "defaultMessage": "Something went wrong. Try again!"
-  },
-  "global.info.added_to_wishlist": {
-    "defaultMessage": "{quantity} {quantity, plural, one {item} other {items}} added to wishlist"
-  },
-  "global.info.already_in_wishlist": {
-    "defaultMessage": "Item is already in wishlist"
-  },
-  "global.info.removed_from_wishlist": {
-    "defaultMessage": "Item removed from wishlist"
-  },
-  "global.link.added_to_wishlist.view_wishlist": {
-    "defaultMessage": "View"
-  },
   "header.button.assistive_msg.logo": {
     "defaultMessage": "Logo"
   },
@@ -625,7 +646,7 @@
     "defaultMessage": "Opens a dialog"
   },
   "header.button.assistive_msg.my_account": {
-    "defaultMessage": "My account"
+    "defaultMessage": "My Account"
   },
   "header.button.assistive_msg.my_account_menu": {
     "defaultMessage": "Open account menu"
@@ -647,15 +668,6 @@
   },
   "header.popover.title.my_account": {
     "defaultMessage": "My Account"
-  },
-  "home.description.features": {
-    "defaultMessage": "Out-of-the-box features so that you focus only on adding enhancements."
-  },
-  "home.description.here_to_help": {
-    "defaultMessage": "Contact our support staff."
-  },
-  "home.description.here_to_help_line_2": {
-    "defaultMessage": "They will get you to the right place."
   },
   "home.description.shop_products": {
     "defaultMessage": "This section contains content from the catalog. {docLink} on how to replace it.",
@@ -697,12 +709,6 @@
   "home.features.heading.wishlist": {
     "defaultMessage": "Wishlist"
   },
-  "home.heading.features": {
-    "defaultMessage": "Features"
-  },
-  "home.heading.here_to_help": {
-    "defaultMessage": "We're here to help"
-  },
   "home.heading.shop_products": {
     "defaultMessage": "Shop Products"
   },
@@ -715,17 +721,11 @@
   "home.hero_features.link.on_managed_runtime": {
     "defaultMessage": "Deploy on Managed Runtime"
   },
-  "home.link.contact_us": {
-    "defaultMessage": "Contact Us"
-  },
   "home.link.get_started": {
     "defaultMessage": "Get started"
   },
   "home.link.read_docs": {
     "defaultMessage": "Read docs"
-  },
-  "home.title.react_starter_store": {
-    "defaultMessage": "The React PWA Starter Store for Retail"
   },
   "icons.assistive_msg.lock": {
     "defaultMessage": "Secure"
@@ -749,6 +749,9 @@
   },
   "item_variant.assistive_msg.quantity": {
     "defaultMessage": "Quantity {quantity}"
+  },
+  "item_variant.quantity.label": {
+    "defaultMessage": "Quantity selector for {productName}. Selected quantity is {quantity}"
   },
   "lCPCxk": {
     "defaultMessage": "Please select all your options above"
@@ -918,6 +921,21 @@
   "login_form.action.create_account": {
     "defaultMessage": "Create account"
   },
+  "login_form.button.apple": {
+    "defaultMessage": "Apple"
+  },
+  "login_form.button.back": {
+    "defaultMessage": "Back to Sign In Options"
+  },
+  "login_form.button.continue_securely": {
+    "defaultMessage": "Continue Securely"
+  },
+  "login_form.button.google": {
+    "defaultMessage": "Google"
+  },
+  "login_form.button.password": {
+    "defaultMessage": "Password"
+  },
   "login_form.button.sign_in": {
     "defaultMessage": "Sign In"
   },
@@ -926,6 +944,9 @@
   },
   "login_form.message.dont_have_account": {
     "defaultMessage": "Don't have an account?"
+  },
+  "login_form.message.or_login_with": {
+    "defaultMessage": "Or Login With"
   },
   "login_form.message.welcome_back": {
     "defaultMessage": "Welcome Back"
@@ -1029,6 +1050,9 @@
     "defaultMessage": "1 uppercase letter",
     "description": "Password requirement"
   },
+  "password_reset_success.toast": {
+    "defaultMessage": "Password Reset Success"
+  },
   "payment_selection.heading.credit_card": {
     "defaultMessage": "Credit Card"
   },
@@ -1111,12 +1135,6 @@
   "product_tile.assistive_msg.remove_from_wishlist": {
     "defaultMessage": "Remove {product} from wishlist"
   },
-  "product_tile.badge.label.new": {
-    "defaultMessage": "New"
-  },
-  "product_tile.badge.label.sale": {
-    "defaultMessage": "Sale"
-  },
   "product_view.button.add_bundle_to_cart": {
     "defaultMessage": "Add Bundle to Cart"
   },
@@ -1139,10 +1157,10 @@
     "defaultMessage": "Update"
   },
   "product_view.label.assistive_msg.quantity_decrement": {
-    "defaultMessage": "Decrement Quantity"
+    "defaultMessage": "Decrement Quantity for {productName}"
   },
   "product_view.label.assistive_msg.quantity_increment": {
-    "defaultMessage": "Increment Quantity"
+    "defaultMessage": "Increment Quantity for {productName}"
   },
   "product_view.label.quantity": {
     "defaultMessage": "Quantity"
@@ -1176,6 +1194,9 @@
   },
   "profile_card.title.my_profile": {
     "defaultMessage": "My Profile"
+  },
+  "profile_fields.label.profile_form": {
+    "defaultMessage": "Profile Form"
   },
   "promo_code_fields.button.apply": {
     "defaultMessage": "Apply"
@@ -1213,15 +1234,6 @@
   "register_form.message.create_an_account": {
     "defaultMessage": "Create an account and get first access to the very best products, inspiration and community."
   },
-  "reset_password.button.back_to_sign_in": {
-    "defaultMessage": "Back to Sign In"
-  },
-  "reset_password.info.receive_email_shortly": {
-    "defaultMessage": "You will receive an email at <b>{email}</b> with a link to reset your password shortly."
-  },
-  "reset_password.title.password_reset": {
-    "defaultMessage": "Password Reset"
-  },
   "reset_password_form.action.sign_in": {
     "defaultMessage": "Sign in"
   },
@@ -1249,6 +1261,12 @@
   },
   "shipping_address.button.continue_to_shipping": {
     "defaultMessage": "Continue to Shipping Method"
+  },
+  "shipping_address.label.edit_button": {
+    "defaultMessage": "Edit {address}"
+  },
+  "shipping_address.label.remove_button": {
+    "defaultMessage": "Remove {address}"
   },
   "shipping_address.label.shipping_address_form": {
     "defaultMessage": "Shipping Address Form"
@@ -1298,6 +1316,12 @@
   "signout_confirmation_dialog.message.sure_to_sign_out": {
     "defaultMessage": "Are you sure you want to sign out? You will need to sign back in to proceed with your current order."
   },
+  "social_login_redirect.message.authenticating": {
+    "defaultMessage": "Authenticating..."
+  },
+  "social_login_redirect.message.redirect_link": {
+    "defaultMessage": "If you are not automatically redirected, click <link>this link</link> to proceed."
+  },
   "store_locator.action.find": {
     "defaultMessage": "Find"
   },
@@ -1330,12 +1354,6 @@
   },
   "store_locator.description.viewing_near_your_location": {
     "defaultMessage": "Viewing stores near your location"
-  },
-  "store_locator.dropdown.germany": {
-    "defaultMessage": "Germany"
-  },
-  "store_locator.dropdown.united_states": {
-    "defaultMessage": "United States"
   },
   "store_locator.error.agree_to_share_your_location": {
     "defaultMessage": "Please agree to share your location"
@@ -1624,11 +1642,20 @@
   "use_update_password_fields.label.new_password": {
     "defaultMessage": "New Password"
   },
+  "wishlist_primary_action.button.addSetToCart.label": {
+    "defaultMessage": "Add {productName} set to cart"
+  },
+  "wishlist_primary_action.button.addToCart.label": {
+    "defaultMessage": "Add {productName} to cart"
+  },
   "wishlist_primary_action.button.add_set_to_cart": {
     "defaultMessage": "Add Set to Cart"
   },
   "wishlist_primary_action.button.add_to_cart": {
     "defaultMessage": "Add to Cart"
+  },
+  "wishlist_primary_action.button.viewFullDetails.label": {
+    "defaultMessage": "View full details for {productName}"
   },
   "wishlist_primary_action.button.view_full_details": {
     "defaultMessage": "View Full Details"
@@ -1636,11 +1663,17 @@
   "wishlist_primary_action.button.view_options": {
     "defaultMessage": "View Options"
   },
+  "wishlist_primary_action.button.view_options.label": {
+    "defaultMessage": "View Options for {productName}"
+  },
   "wishlist_primary_action.info.added_to_cart": {
     "defaultMessage": "{quantity} {quantity, plural, one {item} other {items}} added to cart"
   },
   "wishlist_secondary_button_group.action.remove": {
     "defaultMessage": "Remove"
+  },
+  "wishlist_secondary_button_group.info.item.remove.label": {
+    "defaultMessage": "Remove {productName}"
   },
   "wishlist_secondary_button_group.info.item_removed": {
     "defaultMessage": "Item removed from wishlist"
