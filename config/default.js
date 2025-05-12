@@ -104,7 +104,7 @@ module.exports = {
                 path: 'api'
             },
             {
-                host: 'production-support02-dw.demandware.net',
+                host: 'prd.cc.fad.bz',
                 path: 'ocapi'
             }
         ]
