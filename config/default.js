@@ -108,5 +108,8 @@ module.exports = {
                 path: 'ocapi'
             }
         ]
+    },
+    custom: {
+        imageHost: 'prd.cc.fad.bz'
     }
 }

@@ -54,7 +54,7 @@ const Home = () => {
     if (res) {
         res.set(
             'Cache-Control',
-            `s-maxage=${MAX_CACHE_AGE}, stale-while-revalidate={STALE_WHILE_REVALIDATE}`
+            `s-maxage=${MAX_CACHE_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`
         )
     }
 
@@ -77,7 +77,7 @@ const Home = () => {
         <Box data-testid="home-page" layerStyle="page">
             <Seo
                 title="Home Page"
-                description="Commerce Cloud Retail React App"
+                description="Custom Commerce Cloud Retail React App"
                 keywords="Commerce Cloud, Retail React App, React Storefront"
             />
 
