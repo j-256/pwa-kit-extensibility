@@ -11,13 +11,16 @@
     "overridesDir": "overrides"
   },
   "devDependencies": {
-    "@salesforce/retail-react-app": "6.0.1"
+    "@salesforce/retail-react-app": "9.1.1"
   },
   "scripts": {
     "lint": "pwa-kit-dev lint \"**/*.{js,jsx}\"",
     "push": "npm run build && pwa-kit-dev push",
+    "push-map": "npm run build-map && pwa-kit-dev push",
     "test": "pwa-kit-dev test",
     "build": "npm run build-translations && pwa-kit-dev build",
+    "build-map": "cross-env PWA_KIT_SOURCE_MAP=true npm run build",
+    "build-map-nt": "cross-env PWA_KIT_SOURCE_MAP=true pwa-kit-dev build",
     "build-nt": "pwa-kit-dev build",
     "build-start": "pwa-kit-dev build && npm run start",
     "start": "cross-env NODE_ICU_DATA=node_modules/full-icu pwa-kit-dev start",

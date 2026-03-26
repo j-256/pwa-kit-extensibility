@@ -33,15 +33,21 @@ const options = {
     port: 3000,
 
     // The protocol on which the development Express app listens.
+    // Set DEV_SERVER_PROTOCOL to 'https' for HTTPS; defaults to 'http' when unset.
     // Note that http://localhost is treated as a secure context for development,
     // except by Safari.
-    protocol: 'http',
+    protocol: process.env.DEV_SERVER_PROTOCOL || 'http',
+
+    // Optional. Path to SSL certificate (.pem) for HTTPS development. Typically a
+    // self-signed cert for localhost; set DEV_SERVER_SSL_FILE_PATH when using https.
+    sslFilePath: process.env.DEV_SERVER_SSL_FILE_PATH,
 
     // Option for whether to set up a special endpoint for handling
     // private SLAS clients
     // Set this to false if using a SLAS public client
     // When setting this to true, make sure to also set the PWA_KIT_SLAS_CLIENT_SECRET
     // environment variable as this endpoint will return HTTP 501 if it is not set
+    // v9 default: useSLASPrivateClient: false,
     useSLASPrivateClient: true,
 
     // If this is enabled, any HTTP header that has a non ASCII value will be URI encoded
@@ -50,7 +56,17 @@ const options = {
     // of the keys of headers that have been encoded
     // There may be a slight performance loss with requests/responses with large number
     // of headers as we loop through all the headers to verify ASCII vs non ASCII
-    encodeNonAsciiHttpHeaders: true
+    encodeNonAsciiHttpHeaders: true,
+
+    localAllowCookies: false,
+
+    hybridProxy: {
+        enabled: false,
+        sfccOrigin: 'https://zzrf-001.dx.commercecloud.salesforce.com',
+        routingRules: [
+            'http.request.uri.path eq "/" or http.request.uri.path matches "^/callback" or http.request.uri.path matches "^/mobify" or http.request.uri.path matches "^/worker.js" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/$" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/login" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/reset-password" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/registration" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/account" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/account/orders" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/account/orders/(\\\\w+)" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/account/wishlist" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/product/(\\\\w+)" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/search" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/category/(\\\\w+)" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/order-status" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/page/(\\\\w+)" or http.request.uri.path matches "^/(\\\\w+)/([-\\\\w]+)/page-viewer/(\\\\w+)"'
+        ]
+    }
 }
 
 const runtime = getRuntime()
@@ -212,8 +228,16 @@ const throwSlasTokenValidationError = (message, code) => {
 export const createRemoteJWKSet = (tenantId) => {
     const appOrigin = getAppOrigin()
     const {app: appConfig} = getConfig()
-    const shortCode = appConfig.commerceAPI.parameters.shortCode
-    const configTenantId = appConfig.commerceAPI.parameters.organizationId.replace(/^f_ecom_/, '')
+    const shortCode = appConfig.commerceAPI?.parameters?.shortCode
+    const configTenantId = appConfig.commerceAPI?.parameters?.organizationId?.replace(
+        /^f_ecom_/,
+        ''
+    )
+    if (!shortCode || !configTenantId) {
+        throw new Error(
+            'Cannot find `commerceAPI.parameters.(shortCode|organizationId)` in your config file. Please check the config file.'
+        )
+    }
     if (tenantId !== configTenantId) {
         throw new Error(
             `The tenant ID in your PWA Kit configuration ("${configTenantId}") does not match the tenant ID in the SLAS callback token ("${tenantId}").`
@@ -290,29 +314,71 @@ const {handler} = runtime.createHandler(options, (app) => {
                     'img-src': [
                         // Default source for product images - replace with your CDN
                         '*.commercecloud.salesforce.com',
+                        '*.demandware.net',
+                        '*.adyen.com',
+                        'pay.google.com',
+                        'www.gstatic.com',
+                        // Custom: MRT and Experience CDN hosts
+                        '*.mobify-storefront.com',
+                        '*.exp-delivery.com',
                         config.custom.imageHost
                     ],
                     'script-src': [
                         // Used by the service worker in /worker/main.js
-                        'storage.googleapis.com'
+                        'storage.googleapis.com',
+                        // Payment gateways
+                        '*.stripe.com',
+                        '*.paypal.com',
+                        '*.adyen.com',
+                        'pay.google.com',
+                        'www.gstatic.com',
+                        '*.demandware.net',
+                        'maps.googleapis.com',
+                        'places.googleapis.com'
                     ],
                     'connect-src': [
                         // Connect to Einstein APIs
-                        'api.cquotient.com'
+                        'api.cquotient.com',
+                        // Connect to DataCloud APIs
+                        '*.c360a.salesforce.com',
+                        'maps.googleapis.com',
+                        'places.googleapis.com',
+                        // Connect to SCRT2 URLs
+                        '*.salesforce-scrt.com',
+                        // Payment gateways
+                        '*.demandware.net',
+                        '*.adyen.com',
+                        '*.paypal.com',
+                        'pay.google.com',
+                        'payments.google.com',
+                        'google.com/pay',
+                        'google.com/pay/',
+                        'www.google.com/pay',
+                        'www.google.com/pay/',
+                        // Connect to SFCC/ODS instances
+                        '*.demandware.net'
+                    ],
+                    'frame-src': [
+                        // Allow frames from Salesforce site.com (Needed for MIAW)
+                        '*.site.com',
+                        // Payment gateways
+                        '*.stripe.com',
+                        '*.paypal.com',
+                        '*.adyen.com',
+                        'payments.google.com',
+                        'pay.google.com'
+                    ],
+                    'frame-ancestors': [
+                        // Allow Page Designer to embed the storefront in an iframe
+                        '*.demandware.net'
                     ]
                 }
             }
         })
     )
 
-    // Support bfcache
-    // app.use((req, res, next) => {
-    //     res.set('Cache-Control', 'no-cache, no-transform, must-revalidate')
-    //     next()
-    // })
-
     // Handle the redirect from SLAS as to avoid error
-    app.get('/callback?*', (req, res) => {
+    app.get('/callback', (req, res) => {
         // This endpoint does nothing and is not expected to change
         // Thus we cache it for a year to maximize performance
         res.set('Cache-Control', `max-age=31536000`)
@@ -361,6 +427,47 @@ const {handler} = runtime.createHandler(options, (app) => {
     app.get('/favicon.ico', runtime.serveStaticFile('static/ico/favicon.ico'))
 
     app.get('/worker.js(.map)?', runtime.serveServiceWorker)
+
+    // Helper function to transform relative icon paths to absolute URLs
+    function transformIconPaths(data, ecomServerHost) {
+        const baseUrl = `https://${ecomServerHost}/on/demandware.static/Sites-Site/-/-/internal`
+        const methodTypes = data?.paymentMethodTypes
+        if (methodTypes) {
+            for (const method of Object.values(methodTypes)) {
+                for (const image of method.images ?? []) {
+                    if (image.src?.startsWith('/icons/')) {
+                        image.src = `${baseUrl}${image.src}`
+                    }
+                }
+            }
+        }
+        return data
+    }
+
+    // Helper function to fetch payment metadata from the Commerce Cloud instance
+    app.get('/api/payment-metadata', async (req, res) => {
+        try {
+            const response = await fetch(config.app.sfPayments.metadataUrl, {
+                headers: {Accept: 'application/json'}
+            })
+            if (!response.ok) {
+                throw new Error(`Metadata request failed with status: ${response.status}`)
+            }
+            const data = await response.json()
+            const transformedData = transformIconPaths(
+                data,
+                new URL(config.app.sfPayments.metadataUrl).hostname
+            )
+            res.setHeader('Content-Type', 'application/json')
+            res.json(transformedData)
+        } catch (error) {
+            res.status(500).json({
+                error: 'Failed to fetch metadata',
+                details: error.message
+            })
+        }
+    })
+
     app.get('*', runtime.render)
 })
 // SSR requires that we export a single handler function called 'get', that
