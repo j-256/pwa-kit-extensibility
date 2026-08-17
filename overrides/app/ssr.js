@@ -425,6 +425,9 @@ const {handler} = runtime.createHandler(options, (app) => {
 
     app.get('/robots.txt', runtime.serveStaticFile('static/robots.txt'))
     app.get('/favicon.ico', runtime.serveStaticFile('static/ico/favicon.ico'))
+    app.get('/sitemap.xml', (req, res) => {
+        res.redirect(301, '/sitemap_index.xml')
+    })
 
     app.get('/worker.js(.map)?', runtime.serveServiceWorker)
 
