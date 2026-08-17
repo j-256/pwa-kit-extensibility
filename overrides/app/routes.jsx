@@ -22,8 +22,14 @@ const ProductSearch = loadable(() => import('./pages/product-search'), {fallback
 
 // Base pages for config-driven routes (not included in the named routes export)
 const Login = loadable(() => import('@salesforce/retail-react-app/app/pages/login'), {fallback})
-const ResetPassword = loadable(() => import('@salesforce/retail-react-app/app/pages/reset-password'), {fallback})
-const SocialLoginRedirect = loadable(() => import('@salesforce/retail-react-app/app/pages/social-login-redirect'), {fallback})
+const ResetPassword = loadable(
+    () => import('@salesforce/retail-react-app/app/pages/reset-password'),
+    {fallback}
+)
+const SocialLoginRedirect = loadable(
+    () => import('@salesforce/retail-react-app/app/pages/social-login-redirect'),
+    {fallback}
+)
 const PageNotFound = loadable(() => import('@salesforce/retail-react-app/app/pages/page-not-found'))
 
 export default () => {

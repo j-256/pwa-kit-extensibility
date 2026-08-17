@@ -10,7 +10,9 @@ import {
     Button
 } from '@salesforce/retail-react-app/app/components/shared/ui'
 // Direct @chakra-ui/react imports break hydration in extensible template (separate instance from ChakraProvider)
-const Code = (props) => <Box as="code" px={1} bg="gray.100" borderRadius="sm" fontSize="sm" {...props} />
+const Code = (props) => (
+    <Box as="code" px={1} bg="gray.100" borderRadius="sm" fontSize="sm" {...props} />
+)
 //import useEinstein from '@salesforce/retail-react-app/app/hooks/use-einstein'
 import useMultiSite from '@salesforce/retail-react-app/app/hooks/use-multi-site'
 import {useProductSearch, useDNT} from '@salesforce/commerce-sdk-react'
@@ -81,17 +83,38 @@ const TestPage = () => {
         {label: 'Pathname', value: pathname},
         {label: 'Query arg', value: queryArg || <em>(none)</em>},
         {label: 'Active locale', value: multiSiteLocale?.id || locale},
-        {label: 'Active currency', value: multiSiteLocale?.preferredCurrency || site?.defaultCurrency || <em>(unknown)</em>},
+        {
+            label: 'Active currency',
+            value: multiSiteLocale?.preferredCurrency || site?.defaultCurrency || <em>(unknown)</em>
+        },
         {label: 'Site ID', value: site?.id || <em>(none)</em>},
-        {label: 'DNT Selected', value: typeof selectedDnt === 'boolean' ? selectedDnt.toString() : <em>(unset)</em>},
-        {label: 'DNT Effective', value: typeof effectiveDnt === 'boolean' ? effectiveDnt.toString() : <em>(unset)</em>}
+        {
+            label: 'DNT Selected',
+            value: typeof selectedDnt === 'boolean' ? selectedDnt.toString() : <em>(unset)</em>
+        },
+        {
+            label: 'DNT Effective',
+            value: typeof effectiveDnt === 'boolean' ? effectiveDnt.toString() : <em>(unset)</em>
+        }
     ]
 
     return (
-        <Box maxW="600px" mx="auto" mt={10} mb={10} p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
-            <Heading as="h1" size="lg" mb={4}>Test & Debug Page</Heading>
+        <Box
+            maxW="600px"
+            mx="auto"
+            mt={10}
+            mb={10}
+            p={6}
+            borderWidth={1}
+            borderRadius="lg"
+            boxShadow="md"
+        >
+            <Heading as="h1" size="lg" mb={4}>
+                Test & Debug Page
+            </Heading>
             <Text mb={4} color="gray.600">
-                This page is for debugging and development. The <Code>arg</Code> query string parameter will be echoed back on this page.
+                This page is for debugging and development. The <Code>arg</Code> query string
+                parameter will be echoed back on this page.
             </Text>
             <Stack spacing={2} mb={6}>
                 {info.map((item, i) => (
@@ -102,18 +125,32 @@ const TestPage = () => {
                 ))}
             </Stack>
             <Box mb={4}>
-                <Text fontWeight="bold" mb={2}>DNT Controls:</Text>
+                <Text fontWeight="bold" mb={2}>
+                    DNT Controls:
+                </Text>
                 <Stack direction="row" spacing={3}>
-                    <Button onClick={() => handleSetDnt(true)} isLoading={dntLoading} colorScheme="green">
+                    <Button
+                        onClick={() => handleSetDnt(true)}
+                        isLoading={dntLoading}
+                        colorScheme="green"
+                    >
                         Set DNT: true
                     </Button>
-                    <Button onClick={() => handleSetDnt(false)} isLoading={dntLoading} colorScheme="red">
+                    <Button
+                        onClick={() => handleSetDnt(false)}
+                        isLoading={dntLoading}
+                        colorScheme="red"
+                    >
                         Set DNT: false
                     </Button>
                 </Stack>
             </Box>
             <Box mb={4}>
-                <Button onClick={handleSlowRequest} isLoading={slowReqLoading} loadingText="Loading...">
+                <Button
+                    onClick={handleSlowRequest}
+                    isLoading={slowReqLoading}
+                    loadingText="Loading..."
+                >
                     Simulate Slow Request
                 </Button>
                 <Box mt={3}>
@@ -122,22 +159,37 @@ const TestPage = () => {
                 </Box>
             </Box>
             <Box mb={4}>
-                <Button onClick={handleExpensiveSearch} isLoading={isSearchFetching} loadingText="Searching...">
+                <Button
+                    onClick={handleExpensiveSearch}
+                    isLoading={isSearchFetching}
+                    loadingText="Searching..."
+                >
                     Run Root Category Search
                 </Button>
                 <Box mt={3}>
                     {isSearchFetching && <Skeleton height="40px" width="100%" />}
                     {isSearchError && (
-                        <Text color="red.500">Error: {searchError?.message || 'Unknown error'}</Text>
+                        <Text color="red.500">
+                            Error: {searchError?.message || 'Unknown error'}
+                        </Text>
                     )}
                     {!isSearchFetching && searchResult && (
                         <Box>
-                            <Text fontWeight="bold" mb={2}>Root Category Search Results ({searchResult.total || 0} found):</Text>
+                            <Text fontWeight="bold" mb={2}>
+                                Root Category Search Results ({searchResult.total || 0} found):
+                            </Text>
                             <Stack spacing={1}>
                                 {(searchResult.hits || []).map((hit) => (
-                                    <Box key={hit.productId} p={2} borderWidth={1} borderRadius="md">
+                                    <Box
+                                        key={hit.productId}
+                                        p={2}
+                                        borderWidth={1}
+                                        borderRadius="md"
+                                    >
                                         <Text fontWeight="bold">{hit.productName}</Text>
-                                        <Text fontSize="sm" color="gray.500">ID: {hit.productId}</Text>
+                                        <Text fontSize="sm" color="gray.500">
+                                            ID: {hit.productId}
+                                        </Text>
                                     </Box>
                                 ))}
                             </Stack>

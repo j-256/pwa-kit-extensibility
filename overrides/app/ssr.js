@@ -16,6 +16,9 @@ import {getRuntime} from '@salesforce/pwa-kit-runtime/ssr/server/express'
 import {defaultPwaKitSecurityHeaders} from '@salesforce/pwa-kit-runtime/utils/middleware'
 import {getConfig} from '@salesforce/pwa-kit-runtime/utils/ssr-config'
 import {getAppOrigin} from '@salesforce/pwa-kit-react-sdk/utils/url'
+import logger from '@salesforce/pwa-kit-runtime/utils/logger-instance'
+import {registerTokenBridgeRoute} from '@salesforce/retail-react-app/app/components/shopper-agent/token-bridge'
+import {getCommerceClientOverridesCspSources} from '@salesforce/retail-react-app/app/utils/commerce-client-overrides'
 
 const config = getConfig()
 
@@ -47,7 +50,6 @@ const options = {
     // Set this to false if using a SLAS public client
     // When setting this to true, make sure to also set the PWA_KIT_SLAS_CLIENT_SECRET
     // environment variable as this endpoint will return HTTP 501 if it is not set
-    // v9 default: useSLASPrivateClient: false,
     useSLASPrivateClient: true,
 
     // If this is enabled, any HTTP header that has a non ASCII value will be URI encoded
@@ -300,6 +302,17 @@ export async function jwksCaching(req, res, options) {
     }
 }
 
+// Trusted Agent callbacks must render without caching OAuth material
+export function handleCallback(req, res, next) {
+    if (req.query.code && req.query.state) {
+        res.set('Cache-Control', 'no-store')
+        return next()
+    }
+
+    res.set('Cache-Control', `max-age=31536000`)
+    res.send()
+}
+
 const {handler} = runtime.createHandler(options, (app) => {
     app.use(express.json()) // To parse JSON payloads
     app.use(express.urlencoded({extended: true}))
@@ -318,12 +331,16 @@ const {handler} = runtime.createHandler(options, (app) => {
                         '*.adyen.com',
                         'pay.google.com',
                         'www.gstatic.com',
-                        // Custom: MRT and Experience CDN hosts
+                        'cimulate.ai',
+                        '*.cimulate.ai',
                         '*.mobify-storefront.com',
                         '*.exp-delivery.com',
                         config.custom.imageHost
                     ],
                     'script-src': [
+                        '*.cimulate.ai',
+                        '*.sfcc-store-internal.net',
+                        ...getCommerceClientOverridesCspSources(config.app.commerceAgent),
                         // Used by the service worker in /worker/main.js
                         'storage.googleapis.com',
                         // Payment gateways
@@ -339,6 +356,8 @@ const {handler} = runtime.createHandler(options, (app) => {
                     'connect-src': [
                         // Connect to Einstein APIs
                         'api.cquotient.com',
+                        // Connect to Commerce Client widget APIs
+                        '*.cimulate.ai',
                         // Connect to DataCloud APIs
                         '*.c360a.salesforce.com',
                         'maps.googleapis.com',
@@ -378,12 +397,7 @@ const {handler} = runtime.createHandler(options, (app) => {
     )
 
     // Handle the redirect from SLAS as to avoid error
-    app.get('/callback', (req, res) => {
-        // This endpoint does nothing and is not expected to change
-        // Thus we cache it for a year to maximize performance
-        res.set('Cache-Control', `max-age=31536000`)
-        res.send()
-    })
+    app.get('/callback', handleCallback)
 
     app.get('/:shortCode/:tenantId/oauth2/jwks', (req, res) => {
         jwksCaching(req, res, {shortCode: req.params.shortCode, tenantId: req.params.tenantId})
@@ -422,6 +436,42 @@ const {handler} = runtime.createHandler(options, (app) => {
             )
         })
     })
+
+    app.get('/api/maintenance-page', async (_req, res) => {
+        const {app: appConfig} = config
+        const {sharedMaintenancePage, cdnUrl, forwardedHost} =
+            appConfig?.pages?.maintenancePage || {}
+
+        if (!sharedMaintenancePage || !cdnUrl) {
+            return res.status(404).end()
+        }
+
+        try {
+            const cdnRes = await fetch(cdnUrl, {
+                headers: {'x-dw-forwarded-host': forwardedHost}
+            })
+            if (!cdnRes.ok && cdnRes.status !== 503) {
+                return res.status(cdnRes.status).end()
+            }
+            let html = await cdnRes.text()
+            html = html.replace(/<\/?html[^>]*>/gi, '')
+            html = html.replace(/<\/?head[^>]*>/gi, '')
+            html = html.replace(/<\/?body[^>]*>/gi, '')
+            res.setHeader('Content-Type', 'text/html')
+            res.send(html)
+        } catch (error) {
+            logger.error('Failed to fetch maintenance page', {
+                namespace: 'maintenance-page',
+                additionalProperties: {error}
+            })
+            res.status(502).json({
+                error: 'Failed to fetch maintenance page',
+                details: error.message
+            })
+        }
+    })
+
+    registerTokenBridgeRoute(app)
 
     app.get('/robots.txt', runtime.serveStaticFile('static/robots.txt'))
     app.get('/favicon.ico', runtime.serveStaticFile('static/ico/favicon.ico'))

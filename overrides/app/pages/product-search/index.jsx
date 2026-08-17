@@ -1,5 +1,13 @@
 import React from 'react'
-import {Box, Heading, Text, SimpleGrid, Image, Skeleton, Spinner} from '@salesforce/retail-react-app/app/components/shared/ui'
+import {
+    Box,
+    Heading,
+    Text,
+    SimpleGrid,
+    Image,
+    Skeleton,
+    Spinner
+} from '@salesforce/retail-react-app/app/components/shared/ui'
 import {useProductSearch} from '@salesforce/commerce-sdk-react'
 import {useLocation} from 'react-router-dom'
 
@@ -28,24 +36,39 @@ const ProductSearchPage = () => {
     })
     const products = searchResult?.hits || []
     const resultCount = searchResult?.hits?.length || 0
-    const searchTotal = searchResult?.total || 0;
+    const searchTotal = searchResult?.total || 0
 
     return (
-        <Box maxW="900px" mx="auto" mt={10} mb={10} p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
-            <Heading as="h1" size="lg" mb={2}>Product Search</Heading>
+        <Box
+            maxW="900px"
+            mx="auto"
+            mt={10}
+            mb={10}
+            p={6}
+            borderWidth={1}
+            borderRadius="lg"
+            boxShadow="md"
+        >
+            <Heading as="h1" size="lg" mb={2}>
+                Product Search
+            </Heading>
             <Text mb={4} color="gray.600">
-                Showing <b>{resultCount}</b> of {searchTotal} results for "<b>{q}</b>"
+                Showing <b>{resultCount}</b> of {searchTotal} results for &quot;<b>{q}</b>&quot;
             </Text>
-            {isError && <Text color="red.500">Error: {error?.message || 'Failed to fetch products.'}</Text>}
+            {isError && (
+                <Text color="red.500">Error: {error?.message || 'Failed to fetch products.'}</Text>
+            )}
             <SimpleGrid columns={{base: 1, sm: 2, md: 3}} spacing={6}>
-                {loading && Array(resultCount).map((_, i) => (
-                    <Skeleton key={i} height="200px" />
-                ))}
-                {!loading && products.length === 0 && !isError && (
-                    <Text>No products found.</Text>
-                )}
+                {loading && Array(resultCount).map((_, i) => <Skeleton key={i} height="200px" />)}
+                {!loading && products.length === 0 && !isError && <Text>No products found.</Text>}
                 {products.map((product) => (
-                    <Box key={product.productId} borderWidth={1} borderRadius="md" p={4} boxShadow="sm">
+                    <Box
+                        key={product.productId}
+                        borderWidth={1}
+                        borderRadius="md"
+                        p={4}
+                        boxShadow="sm"
+                    >
                         <Image
                             src={product.image?.disBaseLink}
                             alt={product.productName}
@@ -58,9 +81,13 @@ const ProductSearchPage = () => {
                             borderRadius="md"
                         />
                         <Text fontWeight="bold">{product.productName}</Text>
-                        <Text fontSize="sm" color="gray.500">ID: {product.productId}</Text>
+                        <Text fontSize="sm" color="gray.500">
+                            ID: {product.productId}
+                        </Text>
                         {product.price && (
-                            <Text color="green.600" fontWeight="bold">${product.price}</Text>
+                            <Text color="green.600" fontWeight="bold">
+                                ${product.price}
+                            </Text>
                         )}
                     </Box>
                 ))}

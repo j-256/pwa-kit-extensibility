@@ -10,6 +10,9 @@ const {parseSettings, validateOtpTokenLength} = require('./utils.js')
 
 module.exports = {
     app: {
+        mrtDataStore: {
+            enabled: false
+        },
         commerceAgent: parseSettings(process.env.COMMERCE_AGENT_SETTINGS) || {
             enabled: 'false',
             askAgentOnSearch: 'false',
@@ -21,12 +24,27 @@ module.exports = {
             commerceOrgId: '',
             siteId: '',
             enableConversationContext: 'false',
-            conversationContext: []
+            conversationContext: [],
+            provider: 'miaw',
+            cc_cdnVersion: '',
+            commerceClientScriptSourceUrl: '',
+            cc_esDeveloperName: '',
+            cc_headerText: '',
+            cc_disclaimerMarkdown: '',
+            cc_dialogFullHeight: 'true',
+            cc_dialogWidth: '420px',
+            cc_widgetPosition: 'bottom-right',
+            cc_showFab: 'false',
+            cc_pagePush: 'false',
+            cc_logoUrl: '',
+            cc_isOpen: 'false',
+            cc_isDevelopment: 'false',
+            cc_enableEscalationToAgent: 'false',
+            cc_enableDownloadTranscript: 'true',
+            cc_overridesUrl: ''
         },
         url: {
-            // v9 default: site: 'path',
-            // v9 default: locale: 'path',
-            // v9 default: showDefaults: true,
+            // Keep the default site and locale out of storefront paths
             locale: 'none',
             showBasePath: false,
             interpretPlusSignAsSpace: false
@@ -39,9 +57,7 @@ module.exports = {
                 landingPath: '/passwordless-login-landing'
             },
             social: {
-                // v9 default: enabled: false,
                 enabled: true,
-                // v9 default: idps: ['google', 'apple'],
                 idps: ['google'],
                 redirectURI: process.env.SOCIAL_LOGIN_REDIRECT_URI || '/social-callback'
             },
@@ -50,13 +66,7 @@ module.exports = {
                 landingPath: '/reset-password-landing'
             }
         },
-        // v9 default: defaultSite: 'RefArchGlobal',
         defaultSite: 'RefArchJ',
-        // v9 default:
-        // siteAliases: {
-        //     RefArch: 'us',
-        //     RefArchGlobal: 'global'
-        // },
         sites,
         commerceAPI: {
             proxyPath: `/mobify/proxy/api`,
@@ -84,6 +94,11 @@ module.exports = {
         pages: {
             cart: {
                 groupBonusProductsWithQualifyingProduct: true
+            },
+            maintenancePage: {
+                sharedMaintenancePage: true,
+                cdnUrl: 'https://prd.cmp.cdn.commercecloud.salesforce.com',
+                forwardedHost: ''
             }
         },
         storeLocatorEnabled: true,
@@ -110,6 +125,7 @@ module.exports = {
     ],
     ssrParameters: {
         ssrFunctionNodeVersion: '24.x',
+        enableHttpOnlySessionCookies: false,
         proxyConfigs: [
             {
                 host: 'hzx11t3w.api.commercecloud.salesforce.com',
