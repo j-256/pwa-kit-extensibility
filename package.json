@@ -1,7 +1,7 @@
 {
   "name": "j-pwa",
   "version": "0.0.1",
-  "license": "See license in LICENSE",
+  "license": "BSD-3-Clause",
   "packageManager": "npm@11.19.0",
   "engines": {
     "node": "^22.9.0 || ^24.0.0",

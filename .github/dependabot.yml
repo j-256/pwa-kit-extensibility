@@ -5,10 +5,21 @@ updates:
     schedule:
       interval: weekly
       day: friday
-      time: "07:00"
+      time: "07:30"
       timezone: America/Chicago
     groups:
       production:
         dependency-type: production
       development:
         dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+      time: "07:30"
+      timezone: America/Chicago
+    groups:
+      all-actions:
+        patterns:
+          - "*"
