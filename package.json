@@ -65,7 +65,6 @@
     "tail-logs": "pwa-kit-dev tail-logs",
     "postinstall": "npm run compile-translations && npm run compile-translations:pseudo",
     "analyze-build": "cross-env MOBIFY_ANALYZE=true npm run build",
-    "test:lighthouse": "cross-env NODE_ENV=production lhci autorun --config=tests/lighthouserc.js",
     "save-credentials": "pwa-kit-dev save-credentials",
     "build-translations": "npm run extract-default-translations && npm run compile-translations && npm run compile-translations:pseudo",
     "start:pseudolocale": "npm run extract-default-translations && npm run compile-translations:pseudo && cross-env USE_PSEUDOLOCALE=true npm run start",
