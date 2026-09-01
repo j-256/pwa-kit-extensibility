@@ -7,11 +7,18 @@
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const base = require('@salesforce/pwa-kit-dev/configs/jest/jest.config.js')
+const TRANSFORM_PACKAGES = [
+    '@salesforce/retail-react-app',
+    'decode-uri-component',
+    'filter-obj',
+    'query-string',
+    'split-on-first'
+].join('|')
 
 module.exports = {
     ...base,
     // To support extensibility, jest needs to transform the underlying templates/extensions
-    transformIgnorePatterns: ['/node_modules/(?!@salesforce/retail-react-app/.*)'],
+    transformIgnorePatterns: [`/node_modules/(?!(${TRANSFORM_PACKAGES})/)`],
     moduleNameMapper: {
         ...base.moduleNameMapper,
         // pulled from @salesforce/retail-react-app jest.config.js
