@@ -12,11 +12,6 @@
       "name": "node",
       "version": "^22.9.0 || ^24.0.0",
       "onFail": "error"
-    },
-    "packageManager": {
-      "name": "npm",
-      "version": "^11.19.0",
-      "onFail": "error"
     }
   },
   "allowScripts": {

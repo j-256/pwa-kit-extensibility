@@ -19,7 +19,7 @@ npm ci
 npm start
 ```
 
-The checked-in `.nvmrc` selects the latest installed Node 24 release. npm also rejects install, CI, and script commands when the active Node or npm version is outside the supported ranges in `package.json`.
+The checked-in `.nvmrc` selects the latest installed Node 24 release. npm rejects install, CI, and script commands when the active Node version is outside the supported range in `package.json`; the package metadata separately pins the expected npm release.
 
 The storefront listens on `http://localhost:3000` by default.
 
