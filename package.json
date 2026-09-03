@@ -74,6 +74,7 @@
     "test": "pwa-kit-dev test",
     "start": "cross-env NODE_ICU_DATA=node_modules/full-icu pwa-kit-dev start",
     "build": "npm run build-translations && pwa-kit-dev build",
+    "postbuild": "test -f build/loadable-stats.json || (echo 'postbuild failed: build/loadable-stats.json is missing (client bundle was skipped; ensure overrides/app/main.jsx exists)' >&2; exit 1)",
     "build-nt": "pwa-kit-dev build",
     "build-start": "pwa-kit-dev build && npm run start",
     "build-map": "cross-env PWA_KIT_SOURCE_MAP=true npm run build",
