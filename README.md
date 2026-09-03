@@ -13,9 +13,13 @@ This Salesforce B2C Commerce storefront extends the Retail React App through PWA
 Install the locked dependency tree and start the development server:
 
 ```sh
+nvm install
+nvm use
 npm ci
 npm start
 ```
+
+The checked-in `.nvmrc` selects the latest installed Node 24 release. npm also rejects install, CI, and script commands when the active Node or npm version is outside the supported ranges in `package.json`.
 
 The storefront listens on `http://localhost:3000` by default.
 

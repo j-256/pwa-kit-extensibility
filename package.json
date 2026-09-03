@@ -7,19 +7,44 @@
     "node": "^22.9.0 || ^24.0.0",
     "npm": "^11.19.0"
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^22.9.0 || ^24.0.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "^11.19.0",
+      "onFail": "error"
+    }
+  },
+  "allowScripts": {
+    "@salesforce/retail-react-app@10.2.0": true,
+    "core-js": false,
+    "core-js-pure": false,
+    "es5-ext": false,
+    "fsevents": false,
+    "full-icu": false,
+    "msw": false
+  },
   "ccExtensibility": {
     "extends": "@salesforce/retail-react-app",
     "overridesDir": "overrides"
   },
   "devDependencies": {
-    "@salesforce/retail-react-app": "10.2.0"
+    "@salesforce/retail-react-app": "10.2.0",
+    "proxy-agent": "8.0.2"
   },
   "overrides": {
-    "@lhci/cli": "0.15.1",
+    "@lhci/cli": {
+      ".": "0.15.1",
+      "proxy-agent": "6.5.0"
+    },
     "@salesforce/mrt-utilities": {
       ".": "0.2.2",
       "http-proxy-middleware": "3.0.7",
-      "qs": "6.15.3"
+      "qs": "6.16.0"
     },
     "@salesforce/storefront-next-runtime": {
       "react": "^18.2.0",
