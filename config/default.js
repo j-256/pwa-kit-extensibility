@@ -116,13 +116,7 @@ module.exports = {
     pageNotFoundURL: '/page-not-found',
     ssrEnabled: true,
     ssrOnly: ['ssr.js', 'ssr.js.map', 'node_modules/**/*.*'],
-    ssrShared: [
-        'static/ico/favicon.ico',
-        'static/robots.txt',
-        '**/*.js',
-        '**/*.js.map',
-        '**/*.json'
-    ],
+    ssrShared: ['static/ico/favicon.ico', '**/*.js', '**/*.js.map', '**/*.json'],
     ssrParameters: {
         ssrFunctionNodeVersion: '24.x',
         enableHttpOnlySessionCookies: false,

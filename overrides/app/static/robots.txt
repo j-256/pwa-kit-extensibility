@@ -1,4 +1,0 @@
-User-agent: *
-Disallow:
-
-Sitemap: https://pwa.cc.fad.bz/sitemap_index.xml

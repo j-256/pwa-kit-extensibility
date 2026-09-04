@@ -476,7 +476,16 @@ const {handler} = runtime.createHandler(options, (app) => {
 
     registerTokenBridgeRoute(app)
 
-    app.get('/robots.txt', runtime.serveStaticFile('static/robots.txt'))
+    // Serve robots.txt dynamically so the Sitemap URL matches the host the
+    // request actually arrived on -- prefer the X-Forwarded-Host origin (set
+    // into res.locals by the runtime, the same source the useOrigin hook uses)
+    // so a custom domain fronting the CDN wins, else the environment app origin
+    // Requires X-Forwarded-Host to be forwarded to the SSR to beat the fallback
+    app.get('/robots.txt', (req, res) => {
+        const origin = res.locals.xForwardedOrigin || getAppOrigin()
+        res.type('text/plain')
+        res.send(`User-agent: *\nDisallow:\n\nSitemap: ${origin}/sitemap_index.xml\n`)
+    })
     app.get('/favicon.ico', runtime.serveStaticFile('static/ico/favicon.ico'))
     app.get('/sitemap.xml', (req, res) => {
         res.redirect(301, '/sitemap_index.xml')
