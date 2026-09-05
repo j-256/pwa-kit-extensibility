@@ -25,6 +25,12 @@ The storefront listens on `http://localhost:3000` by default.
 
 Storefront and site settings live in `config/default.js` and `config/sites.js`. Supply credentials such as Marketing Cloud secrets and optional integration keys through environment variables. Never commit those values.
 
+### Switching backend instances
+
+The shopper login SDK caches its SLAS access and refresh tokens in the browser keyed by the storefront's site ID, not by the backend instance. If you repoint the dev server at a different B2C Commerce instance while reusing the same browser profile, and both configs share a site ID, the SDK keeps sending the previous instance's cached token. That token is valid but belongs to the wrong instance, so Shopper API calls proxied through `/mobify/proxy/api` return `403 Forbidden` while the page itself still loads.
+
+To recover, clear site data for `http://localhost:3000` (DevTools > Application > Clear site data) and reload, which mints a fresh token for the current instance; using a separate browser profile per instance avoids the collision entirely. A `403` here means a valid token aimed at the wrong instance, which is distinct from a `401`, which means a genuine authentication failure worth investigating on its own.
+
 ## Project structure
 
 - `overrides/` contains components, pages, routes, static assets, and SSR behavior layered onto the Retail React App
