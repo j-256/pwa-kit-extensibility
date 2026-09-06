@@ -50,10 +50,10 @@ const options = {
     // Set this to false if using a SLAS public client
     // When setting this to true, make sure to also set the PWA_KIT_SLAS_CLIENT_SECRET
     // environment variable as this endpoint will return HTTP 501 if it is not set
-    // Configurable per environment via `config.app.useSLASPrivateClient`; when a
-    // config file does not set it, defaults to true (prd and sbx both use a
-    // private client)
-    useSLASPrivateClient: config.app?.useSLASPrivateClient ?? true,
+    // Configurable per environment via `config.app.useSLASPrivateClient`; defaults
+    // to false to match the PWA Kit default, so each private-client environment
+    // (e.g. default and sbx) opts in explicitly in its config file
+    useSLASPrivateClient: config.app?.useSLASPrivateClient ?? false,
 
     // If this is enabled, any HTTP header that has a non ASCII value will be URI encoded
     // If there any HTTP headers that have been encoded, an additional header will be

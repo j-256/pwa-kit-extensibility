@@ -10,6 +10,10 @@ const {parseSettings, validateOtpTokenLength} = require('./utils.js')
 
 module.exports = {
     app: {
+        // This is a private SLAS client environment, so PWA_KIT_SLAS_CLIENT_SECRET
+        // must be set (on its MRT environment, and locally for dev). ssr.js defaults
+        // this to false, so each private-client environment opts in explicitly here
+        useSLASPrivateClient: true,
         mrtDataStore: {
             enabled: false
         },
