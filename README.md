@@ -79,6 +79,8 @@ npm run push -- -m "Describe the bundle"
 
 Use `-s` to select a different project. Deployment requires Runtime Admin access.
 
+Deploy to a specific target and block until it goes live by adding `-t <target> -w` (e.g. `npm run push -- -t sbx -w -m "..."`). To check a target's current deployment state without pushing, run `npm run deploy-status -- <target>`, which prints the Managed Runtime state (`ACTIVE` once live). It reads the same `~/.mobify` credentials as `push`.
+
 ## Documentation
 
 - [PWA Kit and Managed Runtime overview](https://developer.salesforce.com/docs/commerce/pwa-kit-managed-runtime/overview)
