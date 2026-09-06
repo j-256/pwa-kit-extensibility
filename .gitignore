@@ -1,4 +1,10 @@
 .DS_Store
 build
+coverage
 node_modules
 overrides/app/static/translations/compiled
+
+# Local dev env files (see .env.example)
+.env
+.env.*
+!.env.example

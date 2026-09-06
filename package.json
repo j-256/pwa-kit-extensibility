@@ -29,6 +29,8 @@
   },
   "devDependencies": {
     "@salesforce/retail-react-app": "10.2.0",
+    "dotenv": "17.4.2",
+    "dotenv-expand": "1000.0.0",
     "proxy-agent": "8.0.2"
   },
   "overrides": {

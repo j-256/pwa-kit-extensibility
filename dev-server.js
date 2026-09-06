@@ -28,8 +28,15 @@
  * `--inspect` is available via the `start:inspect` script. To disable client HMR,
  * run with `HMR=false`
  */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path')
 const {getConfig} = require('@salesforce/pwa-kit-runtime/utils/ssr-config')
+
+// Load local dev vars from .env and .env.<DEPLOY_TARGET> before anything reads
+// the environment, so DEPLOY_TARGET drives getConfig() below and the SLAS
+// secret reaches the SSR server. No-op if no .env files exist; an explicit
+// `VAR=x npm start` still overrides. See .env.example
+require('./config/load-env').loadEnv()
 
 // Mirror the environment that `pwa-kit-dev start` derives from the resolved
 // config (DEPLOY_TARGET selects config/<target>.js, else config/default.js)

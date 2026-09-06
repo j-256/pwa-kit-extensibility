@@ -25,6 +25,25 @@ The storefront listens on `http://localhost:3000` by default.
 
 Storefront and site settings live in `config/default.js` and `config/sites.js`. Supply credentials such as Marketing Cloud secrets and optional integration keys through environment variables. Never commit those values.
 
+### Environment configuration
+
+`npm start` loads local environment variables from git-ignored `.env` files before starting the dev server. Copy `.env.example` and fill in what you need.
+
+- `.env` is always loaded; put `DEPLOY_TARGET` here to choose the default target for a bare `npm start` (e.g. `sbx`; an unset target resolves to `config/default.js`).
+- `.env.<DEPLOY_TARGET>` is overlaid on top for target-specific values, so each backend can supply its own private SLAS client secret.
+
+`${VAR}` references expand from your shell environment, so a secret like the SLAS client secret is referenced by name and never has to live in a file:
+
+```sh
+# .env
+DEPLOY_TARGET=sbx
+
+# .env.<target> (the var name embeds that target's backing instance)
+PWA_KIT_SLAS_CLIENT_SECRET=${SLAS_PRIVATE_CLIENT_SECRET_<instance>}
+```
+
+Precedence per key: an explicit `VAR=x npm start` wins, then `.env.<target>`, then `.env`, then the shell. `PWA_KIT_SLAS_CLIENT_SECRET` is the exception, always taking the file value over an ambient shell value so a stale export cannot shadow it. Switch targets per run with `DEPLOY_TARGET=default npm start`; see [Switching backend instances](#switching-backend-instances) for the token-cache caveat.
+
 ### Switching backend instances
 
 The shopper login SDK caches its SLAS access and refresh tokens in the browser keyed by the storefront's site ID, not by the backend instance. If you repoint the dev server at a different B2C Commerce instance while reusing the same browser profile, and both configs share a site ID, the SDK keeps sending the previous instance's cached token. That token is valid but belongs to the wrong instance, so Shopper API calls proxied through `/mobify/proxy/api` return `403 Forbidden` while the page itself still loads.
