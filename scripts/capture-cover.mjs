@@ -57,7 +57,7 @@ try {
     }
     browser = await chromium.launch()
     const page = await browser.newPage({
-        viewport: {width: 1440, height: 1000}, deviceScaleFactor: 1,
+        viewport: {width: 1440, height: 1000}, deviceScaleFactor: 4,
         reducedMotion: 'reduce', locale: 'en-US'
     })
     page.setDefaultTimeout(60_000)
