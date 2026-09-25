@@ -41,16 +41,18 @@ module.exports = {
     },
     ssrParameters: {
         ...defaultConfig.ssrParameters,
-        // .dx. is acceptable only as a server-side proxy backend host; every
-        // inbound/browser-facing host must use the .my. eCDN domain
         proxyConfigs: [
             {
                 host: 'kv7kzm78.api.commercecloud.salesforce.com',
                 path: 'api'
             },
             {
-                host: 'zzcu-256.dx.commercecloud.salesforce.com',
-                path: 'ocapi'
+                // Active Data's __Analytics-Start, the one storefront controller still
+                // used. Target the .my eCDN storefront origin, not .dx (BM/direct):
+                // .dx 301-redirects storefront paths to .my, and the proxy would leak
+                // that cross-origin redirect to the browser
+                host: 'zzcu-256.my.commercecloud.salesforce.com',
+                path: 'b2c'
             }
         ]
     },

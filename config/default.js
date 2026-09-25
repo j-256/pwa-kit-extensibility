@@ -130,8 +130,9 @@ module.exports = {
                 path: 'api'
             },
             {
+                // Proxies Active Data's __Analytics-Start controller to the B2C instance
                 host: 'prd.cc.fad.bz',
-                path: 'ocapi'
+                path: 'b2c'
             }
         ]
     },
