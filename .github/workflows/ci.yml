@@ -4,12 +4,21 @@ on:
   schedule:
     - cron: '20 5 * * 1'
   workflow_dispatch:
+    inputs:
+      compatibility:
+        description: 'Also validate the supported Node 22 minimum'
+        type: boolean
+        default: false
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
 
 permissions:
   contents: read
@@ -19,9 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version:
-          - 22.9.0
-          - 24.x
+        node-version: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.compatibility && '["22.9.0", "24.x"]' || '["24.x"]') }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

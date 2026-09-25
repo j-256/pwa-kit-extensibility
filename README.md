@@ -21,6 +21,8 @@ npm start
 
 The checked-in `.nvmrc` selects the latest installed Node 24 release. npm rejects install, CI, and script commands when the active Node version is outside the supported range in `package.json`; the package metadata separately pins the expected npm release.
 
+GitHub Actions runs the full tests and production build on Node 24 for pull requests and pushes to `main`, excluding Markdown-only changes. To check the supported Node 22 minimum too, manually dispatch `CI` with `compatibility` enabled. Run that compatibility check before a release or a change to the supported runtime range. Both paths install the locked dependencies with `npm ci`.
+
 The storefront listens on `http://localhost:3000` by default.
 
 Storefront and site settings live in `config/default.js` and `config/sites.js`. Supply credentials such as Marketing Cloud secrets and optional integration keys through environment variables. Never commit those values.
