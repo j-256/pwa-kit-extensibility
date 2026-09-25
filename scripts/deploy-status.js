@@ -93,7 +93,7 @@ async function main() {
     }
 
     const auth = Buffer.from(`${credentials.username}:${credentials.api_key}`).toString('base64')
-    const url = new URL(`/api/projects/${slug}/target/${target}`, MRT_ORIGIN)
+    const url = buildTargetUrl(slug, target)
 
     let res
     try {
@@ -121,4 +121,13 @@ async function main() {
     process.stdout.write(`${slug}/${target}: ${data.state}${host}\n`)
 }
 
-main().catch((error) => fail(1, error.message))
+function buildTargetUrl(slug, target) {
+    return new URL(
+        `/api/projects/${encodeURIComponent(slug)}/target/${encodeURIComponent(target)}`,
+        MRT_ORIGIN
+    )
+}
+
+if (require.main === module) main().catch((error) => fail(1, error.message))
+
+module.exports = {buildTargetUrl}
