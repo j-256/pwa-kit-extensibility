@@ -42,7 +42,7 @@ DEPLOY_TARGET=sbx
 PWA_KIT_SLAS_CLIENT_SECRET=${SLAS_PRIVATE_CLIENT_SECRET_<instance>}
 ```
 
-Precedence per key: an explicit `VAR=x npm start` wins, then `.env.<target>`, then `.env`, then the shell. `PWA_KIT_SLAS_CLIENT_SECRET` is the exception, always taking the file value over an ambient shell value so a stale export cannot shadow it. Switch targets per run with `DEPLOY_TARGET=default npm start`; see [Switching backend instances](#switching-backend-instances) for the token-cache caveat.
+Precedence per key: the files fill only what your environment has not already set, so a shell export or an inline `VAR=x npm start` wins over the files; among the files, `.env.<target>` overrides `.env`. `PWA_KIT_SLAS_CLIENT_SECRET` is the exception, always taking the file value over an ambient shell value so a stale export cannot shadow it. Switch targets per run with `DEPLOY_TARGET=default npm start`; see [Switching backend instances](#switching-backend-instances) for the token-cache caveat.
 
 ### Switching backend instances
 
