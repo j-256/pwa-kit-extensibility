@@ -44,12 +44,16 @@
       "http-proxy-middleware": "3.0.7",
       "qs": "6.16.0"
     },
+    "@salesforce/pwa-kit-dev": {
+      "webpack-dev-middleware": "7.4.6"
+    },
     "@salesforce/storefront-next-runtime": {
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
       "react-router": "^5.3.4"
     },
     "cookie@<0.7.0": "0.7.2",
+    "ip-address": "10.7.3",
     "lighthouse": "13.4.1",
     "micromatch@3.1.0": "4.0.8",
     "minimatch@<=3.1.3": "3.1.4",
