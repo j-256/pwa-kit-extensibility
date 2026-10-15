@@ -71,6 +71,8 @@ npm run build
 
 The build refreshes and compiles the translation catalogs before producing the deployment bundle.
 
+The version-scoped `compression@<1.8.2` override replaces vulnerable copies, including PWA Kit development tooling's exact pin, with the patched release for [premature-response-close memory leaks](https://github.com/advisories/GHSA-vc2v-76pw-4v95). Remove the override when upstream dependencies no longer require affected versions and the regenerated lockfile remains patched.
+
 ## Managed Runtime deployment
 
 Build and upload a bundle to the Managed Runtime project named in `package.json`:
