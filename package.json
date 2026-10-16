@@ -52,6 +52,7 @@
       "react-dom": "^18.2.0",
       "react-router": "^5.3.4"
     },
+    "argparse@<2.0.0": "2.0.1",
     "compression@<1.8.2": "1.8.2",
     "cookie@<0.7.0": "0.7.2",
     "ip-address": "10.7.3",
