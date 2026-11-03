@@ -80,7 +80,8 @@
     "follow-redirects": "1.16.2",
     "jest-config": {
       "deepmerge": "4.1.1"
-    }
+    },
+    "qs": "6.17.1"
   },
   "scripts": {
     "lint": "pwa-kit-dev lint \"**/*.{js,jsx}\"",
