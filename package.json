@@ -55,6 +55,7 @@
     "argparse@<2.0.0": "2.0.1",
     "compression@<1.8.2": "1.8.2",
     "cookie@<0.7.0": "0.7.2",
+    "fast-uri": "^3.1.9",
     "ip-address": "10.7.3",
     "lighthouse": "13.4.1",
     "micromatch@3.1.0": "4.0.8",
