@@ -40,6 +40,8 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - name: Verify translation catalogs are committed
+        run: git diff --exit-code -- translations/
 
   cover:
     name: Build project cover

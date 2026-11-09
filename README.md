@@ -69,7 +69,7 @@ npm test
 npm run build
 ```
 
-The build refreshes and compiles the translation catalogs before producing the deployment bundle.
+The build refreshes and compiles the translation catalogs before producing the deployment bundle. Commit changes to the source catalogs in `translations/` alongside the source or dependency updates that produced them. CI fails if the build changes tracked catalogs; run `npm run build-translations` and commit the refreshed files to resolve that failure.
 
 The version-scoped `compression@<1.8.2` override replaces vulnerable copies, including PWA Kit development tooling's exact pin, with the patched release for [premature-response-close memory leaks](https://github.com/advisories/GHSA-vc2v-76pw-4v95). Remove the override when upstream dependencies no longer require affected versions and the regenerated lockfile remains patched.
 
