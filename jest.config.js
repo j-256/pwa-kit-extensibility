@@ -17,6 +17,8 @@ const TRANSFORM_PACKAGES = [
 
 module.exports = {
     ...base,
+    // Exclude generated package metadata from Jest's module discovery
+    modulePathIgnorePatterns: ['<rootDir>/build/'],
     // To support extensibility, jest needs to transform the underlying templates/extensions
     transformIgnorePatterns: [`/node_modules/(?!(${TRANSFORM_PACKAGES})/)`],
     moduleNameMapper: {

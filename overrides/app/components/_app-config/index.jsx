@@ -7,7 +7,7 @@
 
 /*
  * Developer note! When updating this file, make sure to also update the
- * _app-config template files in pwa-kit-create-app.
+ * _app-config template files in pwa-kit-create-app
  *
  * In the pwa-kit-create-app, the templates are found under:
  * - assets/bootstrap/js/overrides/app/components/_app-config
@@ -22,7 +22,7 @@ import 'focus-visible/dist/focus-visible'
 
 import theme from '@salesforce/retail-react-app/app/theme'
 import {MultiSiteProvider, StoreLocatorProvider} from '@salesforce/retail-react-app/app/contexts'
-import {useAppOrigin} from '@salesforce/retail-react-app/app/hooks/use-app-origin'
+import {useAppOrigin} from '../../hooks/use-app-origin'
 import {
     resolveSiteFromUrl,
     resolveLocaleFromUrl,
@@ -31,7 +31,8 @@ import {
 import {getConfig} from '@salesforce/pwa-kit-runtime/utils/ssr-config'
 import {
     getEnvBasePath,
-    slasPrivateProxyPath
+    slasPrivateProxyPath,
+    slasPublicProxyPath
 } from '@salesforce/pwa-kit-runtime/utils/ssr-namespace-paths'
 import {createUrlTemplate} from '@salesforce/retail-react-app/app/utils/url'
 import createLogger from '@salesforce/pwa-kit-runtime/utils/logger-factory'
@@ -42,6 +43,7 @@ import {withReactQuery} from '@salesforce/pwa-kit-react-sdk/ssr/universal/compon
 import {useCorrelationId} from '@salesforce/pwa-kit-react-sdk/ssr/universal/hooks'
 import {ReactQueryDevtools} from '@tanstack/react-query-devtools'
 import {generateSfdcUserAgent} from '@salesforce/retail-react-app/app/utils/sfdc-user-agent-utils'
+import {isShopperAgentExpressPaymentPath} from '@salesforce/retail-react-app/app/components/shopper-agent/express-payment/routes'
 import {
     DEFAULT_DNT_STATE,
     STORE_LOCATOR_RADIUS,
@@ -57,17 +59,20 @@ const sfdcUserAgent = generateSfdcUserAgent()
 
 /**
  * Use the AppConfig component to inject extra arguments into the getProps
- * methods for all Route Components in the app – typically you'd want to do this
- * to inject a connector instance that can be used in all Pages.
+ * methods for all Route Components in the app - typically you'd want to do this
+ * to inject a connector instance that can be used in all Pages
  *
  * You can also use the AppConfig to configure a state-management library such
- * as Redux, or Mobx, if you like.
+ * as Redux, or Mobx, if you like
  */
 const AppConfig = ({children, locals = {}}) => {
     const {correlationId} = useCorrelationId()
     const headers = {
         'correlation-id': correlationId,
-        sfdc_user_agent: sfdcUserAgent
+        sfdc_user_agent: sfdcUserAgent,
+        'x-site-id': locals.site?.id,
+        // Forward the active SSR trace context to SCAPI and SLAS
+        traceparent: locals.traceparent
     }
 
     const commerceApiConfig = locals.appConfig.commerceAPI
@@ -92,8 +97,12 @@ const AppConfig = ({children, locals = {}}) => {
     const redirectURI = `${appOrigin}${getEnvBasePath()}/callback`
     const proxy = `${appOrigin}${getEnvBasePath()}${commerceApiConfig.proxyPath}`
     const slasPrivateClientProxyEndpoint = `${appOrigin}${getEnvBasePath()}${slasPrivateProxyPath}`
+    const slasPublicClientProxyEndpoint = `${appOrigin}${getEnvBasePath()}${slasPublicProxyPath}`
 
     const pageDesignerParams = locals.pageDesignerParams || {}
+    const requestPath =
+        typeof window === 'undefined' ? locals.originalUrl : window.location.pathname
+    const isShopperAgentExpressPaymentRoute = isShopperAgentExpressPaymentPath(requestPath)
 
     return (
         <CommerceApiProvider
@@ -111,17 +120,25 @@ const AppConfig = ({children, locals = {}}) => {
             // Share the client mode with the server configuration
             enablePWAKitPrivateClient={getConfig().app.useSLASPrivateClient === true}
             privateClientProxyEndpoint={slasPrivateClientProxyEndpoint}
-            // Uncomment 'hybridAuthEnabled' if the current site has Hybrid Auth enabled. Do NOT set this flag for hybrid storefronts using Plugin SLAS.
+            publicClientProxyEndpoint={slasPublicClientProxyEndpoint}
+            // Uncomment 'hybridAuthEnabled' only for platform Hybrid Auth, not Plugin SLAS
             // hybridAuthEnabled={true}
+            cookieDomain={commerceApiConfig.cookieDomain}
             logger={createLogger({packageName: 'commerce-sdk-react'})}
             pageDesignerParams={pageDesignerParams}
+            enableHttpOnlySessionCookies={
+                typeof window !== 'undefined'
+                    ? window.__MRT_ENABLE_HTTPONLY_SESSION_COOKIES__ === 'true'
+                    : process.env.MRT_ENABLE_HTTPONLY_SESSION_COOKIES === 'true'
+            }
         >
             <MultiSiteProvider site={locals.site} locale={locals.locale} buildUrl={locals.buildUrl}>
                 <StoreLocatorProvider config={storeLocatorConfig}>
                     <ChakraProvider theme={theme}>{children}</ChakraProvider>
                 </StoreLocatorProvider>
             </MultiSiteProvider>
-            <ReactQueryDevtools />
+            {/* Keep the floating launcher out of compact express-payment iframes */}
+            {!isShopperAgentExpressPaymentRoute && <ReactQueryDevtools />}
         </CommerceApiProvider>
     )
 }
@@ -168,8 +185,8 @@ AppConfig.propTypes = {
 }
 
 const isServerSide = typeof window === 'undefined'
-// Recommended settings for PWA-Kit usages.
-// NOTE: they will be applied on both server and client side.
+// Recommended settings for PWA-Kit usages
+// NOTE: they will be applied on both server and client side
 // retry is always disabled on server side regardless of the value from the options
 const options = {
     queryClientConfig: {
@@ -178,6 +195,7 @@ const options = {
                 retry: false,
                 refetchOnWindowFocus: false,
                 staleTime: 10 * 1000,
+                useErrorBoundary: (err) => err?.name === 'MaintenanceError',
                 ...(isServerSide ? {retryOnMount: false} : {})
             },
             mutations: {
@@ -188,13 +206,13 @@ const options = {
     beforeHydrate: (data) => {
         const now = Date.now()
 
-        // Helper to reset the data timestamp to time of app load.
+        // Helper to reset the data timestamp to time of app load
         const updateQueryTimeStamp = ({state}) => {
             state.dataUpdatedAt = now
         }
 
         // Update serialized mutations and queries to ensure that the cached data is
-        // considered fresh on first load.
+        // considered fresh on first load
         data?.mutations?.forEach(updateQueryTimeStamp)
         data?.queries?.forEach(updateQueryTimeStamp)
 

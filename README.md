@@ -2,6 +2,10 @@
 
 This Salesforce B2C Commerce storefront extends the Retail React App through PWA Kit Template Extensibility. It keeps the upstream application as its base while adding project-specific routing, SSR integrations, storefront configuration, and translations.
 
+The base template is Retail React App 11.0.0 with PWA Kit 3.22.0 and Commerce SDK React 6.0.0. For upgrades, review the copied SSR and app-provider overrides against the new template alongside the dependency change. The routes override consumes upstream `getDynamicRoutes` so feature-gated routes follow the template.
+
+The main and vendor bundle budgets follow the Retail React App 11 baseline. This increases the previous budgets to accommodate the upgraded template; it does not represent a bundle-size optimization. Run `npm run test:max-file-size` to verify the production bundles against the limits in `package.json`.
+
 ## Requirements
 
 - Node 22.9 or later on major 22, or Node 24
@@ -25,7 +29,7 @@ GitHub Actions runs the full tests and production build on Node 24 for pull requ
 
 The storefront listens on `http://localhost:3000` by default.
 
-Storefront and site settings live in `config/default.js` and `config/sites.js`. Supply credentials such as Marketing Cloud secrets and optional integration keys through environment variables. Never commit those values.
+Storefront and site settings live in `config/default.js` and `config/sites.js`. Supply private SLAS client secrets and optional integration keys through environment variables. Never commit those values.
 
 ### Environment configuration
 
@@ -72,6 +76,14 @@ npm run build
 The build refreshes and compiles the translation catalogs before producing the deployment bundle. Commit changes to the source catalogs in `translations/` alongside the source or dependency updates that produced them. CI fails if the build changes tracked catalogs; run `npm run build-translations` and commit the refreshed files to resolve that failure.
 
 The version-scoped `compression@<1.8.2` override replaces vulnerable copies, including PWA Kit development tooling's exact pin, with the patched release for [premature-response-close memory leaks](https://github.com/advisories/GHSA-vc2v-76pw-4v95). Remove the override when upstream dependencies no longer require affected versions and the regenerated lockfile remains patched.
+
+The `body-parser`, `ip-address`, and version-scoped Zod overrides patch [compressed-body denial of service](https://github.com/advisories/GHSA-27r3-jxmh-p828), [IPv6 zone-identifier processing](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5), and [oversized collection validation](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). The Puppeteer override brings Lighthouse's browser tooling onto a Zod-compatible patched dependency tree. Review these overrides when upgrading upstream tooling; do not replace older Zod major versions indiscriminately.
+
+### Transactional email
+
+Email delivery is unconfigured. Passwordless login and guest order lookup are disabled, and password reset retains `mode: 'email'`; this setting alone does not establish working email delivery. The notification callback handlers reject requests while callback mode or registration verification is unconfigured.
+
+Retail React App 11's callback email delivery uses the `app_pwakit_base` cartridge. Before enabling it, follow the [upstream cartridge setup](https://github.com/SalesforceCommerceCloud/pwa-kit/blob/v3.22.0/packages/template-retail-react-app/cartridges/app_pwakit_base/README.md), provision a dedicated private SLAS client scoped to `c_pwakit_notify`, and set `commerceAPI.parameters.notifyClientId` and the server-side `PWA_KIT_NOTIFY_SLAS_CLIENT_SECRET`. Keep the notification scope off shopper clients. Verify callback allowlists, actual email delivery, cookie forwarding for guest order lookup, and email-link paths against the storefront's prefixless URL configuration before enabling the features.
 
 ## Managed Runtime deployment
 

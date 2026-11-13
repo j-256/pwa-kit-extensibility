@@ -106,6 +106,10 @@ module.exports = {
             }
         },
         storeLocatorEnabled: true,
+        // Enable only after configuring transactional email delivery
+        guestOrderLookup: {
+            enabled: false
+        },
         multishipEnabled: true,
         sfPayments: {
             enabled: false,
