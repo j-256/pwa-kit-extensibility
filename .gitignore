@@ -8,3 +8,9 @@ overrides/app/static/translations/compiled
 .env
 .env.*
 !.env.example
+
+# B2C CLI connections and client certificates
+dw.json
+dw.*.json
+*.p12
+*.pfx

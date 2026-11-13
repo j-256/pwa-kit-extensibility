@@ -85,6 +85,31 @@ Email delivery is unconfigured. Passwordless login and guest order lookup are di
 
 Retail React App 11's callback email delivery uses the `app_pwakit_base` cartridge. Before enabling it, follow the [upstream cartridge setup](https://github.com/SalesforceCommerceCloud/pwa-kit/blob/v3.22.0/packages/template-retail-react-app/cartridges/app_pwakit_base/README.md), provision a dedicated private SLAS client scoped to `c_pwakit_notify`, and set `commerceAPI.parameters.notifyClientId` and the server-side `PWA_KIT_NOTIFY_SLAS_CLIENT_SECRET`. Keep the notification scope off shopper clients. Verify callback allowlists, actual email delivery, cookie forwarding for guest order lookup, and email-link paths against the storefront's prefixless URL configuration before enabling the features.
 
+## B2C cartridge upload
+
+`npm run deploy:cartridge` uploads only `app_pwakit_base` using the installed [B2C CLI](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/code.html). It uses `cartridges/app_pwakit_base` when present; otherwise, it resolves the cartridge inside the installed `ccExtensibility.extends` template. Run `npm ci` first for an extensibility project. A storefront build is not required.
+
+Install the CLI with `npm install --global @salesforce/b2c-cli`. Configure named connections such as `zzcu_256` and `bkwp_stg` using the CLI's project or shared `dw.json` configuration, with the appropriate hostname for each instance. Project connection files and P12/PFX files are ignored by Git. Keep certificate files and credentials in protected storage.
+
+For `--instance <name>` or an exported `SFCC_INSTANCE`, the wrapper maps a complete exported `WEBDAV_USER_<name>` / `WEBDAV_PASS_<name>` pair to the CLI's `SFCC_USERNAME` / `SFCC_PASSWORD`. This supports `WEBDAV_USER_zzcu_256` / `WEBDAV_PASS_zzcu_256` and `WEBDAV_USER_bkwp_stg` / `WEBDAV_PASS_bkwp_stg` without copying credential values into files. The selected pair overrides generic WebDAV credentials; a partially configured or empty pair fails before upload. If neither variable is present, the CLI uses its native authentication configuration. The connection file still supplies the hostname and optional certificate settings. Dry-run output identifies the selected credential-variable names without printing their values.
+
+Inspect the selected connection's hostname and certificate settings, preview the upload, and then upload to an explicit code version:
+
+```sh
+b2c setup inspect --instance zzcu_256
+npm run deploy:cartridge -- --instance zzcu_256 --code-version version1 --dry-run
+npm run deploy:cartridge -- --instance zzcu_256 --code-version version1
+npm run deploy:cartridge -- --instance bkwp_stg --code-version version1
+```
+
+Replace `version1` with the reviewed target code version. `--code-version` or an exported `SFCC_CODE_VERSION` is required; the wrapper does not discover the active version. A dry run prints the source and command without invoking the CLI or checking the remote connection. `--config` selects a different connection file, and `--server` overrides the instance hostname. The mapped WebDAV pair takes precedence over `SFCC_USERNAME` and `SFCC_PASSWORD`. Other shell `SFCC_*` variables and the CLI's project `.env` can override connection-file values; inspect the effective configuration when switching instances. The wrapper does not expand `${VAR}` references in B2C connection files or load the storefront's `.env.<target>` overlays. The wrapper resolves paths and runs the CLI from the project root.
+
+For certificate-based MFA, configure `certificate` and `certificate-passphrase` on the selected connection, or supply `SFCC_CERTIFICATE` and `SFCC_CERTIFICATE_PASSPHRASE` through the environment. `--certificate /absolute/path/client.p12` overrides the certificate path. The CLI accepts PKCS12 `.p12` and `.pfx` files; prefer absolute paths and keep passphrases out of command arguments. A separate certificate endpoint can use `webdav-hostname` in `dw.json` or `--webdav-server` on the wrapper. Certificates are optional, and using one does not disable server certificate verification. See [B2C CLI mTLS configuration](https://salesforcecommercecloud.github.io/b2c-developer-tooling/guide/configuration.html#two-factor-authentication-mtls).
+
+Upload does not import preference metadata, modify a site's cartridge path, configure a notify client, or enable email features. Add `--activate` or `--reload` only when intending that operation; these require API credentials and permissions, and reload needs another code version to toggle through. Follow the cartridge's installation instructions for the remaining backend setup. Email delivery assumes the shopper login is the recipient email, matching the upstream cartridge.
+
+Run `npm run deploy:cartridge -- --help` for options and exit statuses. Verify the wrapper with `npm test -- -- --watch=false --coverage=false --runTestsByPath scripts/deploy-cartridge.test.js`.
+
 ## Managed Runtime deployment
 
 Build and upload a bundle to the Managed Runtime project named in `package.json`:
