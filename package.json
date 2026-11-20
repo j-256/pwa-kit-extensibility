@@ -31,8 +31,8 @@
     "@salesforce/retail-react-app": "11.0.0",
     "dotenv": "18.0.10",
     "dotenv-expand": "1000.0.0",
-    "proxy-agent": "8.0.2",
-    "playwright": "1.65.0"
+    "proxy-agent": "8.0.3",
+    "playwright": "1.65.1"
   },
   "overrides": {
     "@lhci/cli": {
