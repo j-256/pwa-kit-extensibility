@@ -7,8 +7,26 @@ const vm = require('vm')
 
 const CARTRIDGE_ROOT = path.join(__dirname, '../../cartridges/int_pwakit_hooks')
 const PRODUCT_URL = 'https://sandbox.example/s/RefArch/dresses/red.html?source=search#details'
+const PRODUCT_MAPPING = {
+    value: [
+        {
+            apiFamily: 'site',
+            apiName: 'shopper-seo',
+            apiVersion: 'v1',
+            resourcePath: 'url-mapping',
+            parameters: {siteId: 'RefArch', locale: 'en-US', urlSegment: 'dresses/red.html'}
+        }
+    ]
+}
 
-function loadHook({query = 'dress', scapi = true, destination = PRODUCT_URL, failure} = {}) {
+function loadHook({
+    query = 'dress',
+    scapi = true,
+    destination = PRODUCT_URL,
+    failure,
+    locale = 'en_US',
+    includeFailure
+} = {}) {
     const manifest = JSON.parse(fs.readFileSync(path.join(CARTRIDGE_ROOT, 'package.json')))
     const registryPath = path.resolve(CARTRIDGE_ROOT, manifest.hooks)
     const {hooks} = JSON.parse(fs.readFileSync(registryPath))
@@ -24,7 +42,7 @@ function loadHook({query = 'dress', scapi = true, destination = PRODUCT_URL, fai
         request: {
             isSCAPI: () => scapi,
             requestID: 'fixture-request',
-            locale: 'en_US',
+            locale,
             httpParameterMap: {
                 isParameterSubmitted: () => query !== undefined && query !== null,
                 get: () => ({stringValue: query})
@@ -43,6 +61,33 @@ function loadHook({query = 'dress', scapi = true, destination = PRODUCT_URL, fai
             }
             if (id === 'dw/system/Logger') return {getLogger: () => logger}
             if (id === 'dw/system/Site') return {getCurrent: () => ({ID: 'RefArch'})}
+            if (id === 'dw/web/URLUtils')
+                return {https: () => 'https://sandbox.example/s/RefArch/Home-Show'}
+            if (id === 'dw/web/URLParameter')
+                return function (name, value) {
+                    return {name, value}
+                }
+            if (id === 'dw/system/RESTResponseMgr')
+                return {
+                    createScapiRemoteInclude: (
+                        apiFamily,
+                        apiName,
+                        apiVersion,
+                        resourcePath,
+                        ...parameters
+                    ) => {
+                        if (includeFailure) throw includeFailure
+                        return {
+                            apiFamily,
+                            apiName,
+                            apiVersion,
+                            resourcePath,
+                            parameters: Object.fromEntries(
+                                parameters.map(({name, value}) => [name, value])
+                            )
+                        }
+                    }
+                }
             throw new Error(`Unexpected platform dependency: ${id}`)
         }
     }
@@ -77,7 +122,8 @@ test('adds matched metadata while retaining the normal search payload and hook c
         searchPhraseSuggestions: {
             ...original.searchPhraseSuggestions,
             c_isRedirect: true,
-            c_redirectUrl: PRODUCT_URL
+            c_redirectUrl: PRODUCT_URL,
+            c_redirectMapping: PRODUCT_MAPPING
         }
     })
     expect(JSON.stringify(logs)).not.toContain(PRODUCT_URL)
@@ -109,7 +155,8 @@ test.each([undefined, null])('creates missing suggestions only for a match: %j',
     hook(doc)
     expect(doc.searchPhraseSuggestions).toEqual({
         c_isRedirect: true,
-        c_redirectUrl: PRODUCT_URL
+        c_redirectUrl: PRODUCT_URL,
+        c_redirectMapping: PRODUCT_MAPPING
     })
 })
 
@@ -126,7 +173,8 @@ test('populates missing suggestions before a platform setter copies the assigned
     hook(doc)
     expect(doc.searchPhraseSuggestions).toEqual({
         c_isRedirect: true,
-        c_redirectUrl: PRODUCT_URL
+        c_redirectUrl: PRODUCT_URL,
+        c_redirectMapping: PRODUCT_MAPPING
     })
 })
 
@@ -150,6 +198,7 @@ test('retains results and logs a correlated failure without exposing query text'
     const doc = searchDocument()
     doc.searchPhraseSuggestions.c_isRedirect = true
     doc.searchPhraseSuggestions.c_redirectUrl = PRODUCT_URL
+    doc.searchPhraseSuggestions.c_redirectMapping = PRODUCT_MAPPING
     const original = JSON.parse(JSON.stringify(doc))
     expect(hook(doc)).toBeUndefined()
     expect(doc).toEqual(original)
@@ -160,4 +209,59 @@ test('retains results and logs a correlated failure without exposing query text'
     expect(message).toContain('RefArch')
     expect(message).toContain('en_US')
     expect(message).not.toContain('private query detail')
+})
+
+test.each([
+    [
+        'https://sandbox.example/s/RefArch/en-us/new%20arrivals/?source=search#top',
+        'en_US',
+        'new%20arrivals/',
+        'en-US'
+    ],
+    ['https://sandbox.example/s/RefArch/fr_FR/robes/', 'fr_FR', 'robes/', 'fr-FR'],
+    ['https://sandbox.example/english/dresses/', 'en_US', 'english/dresses/', 'en-US']
+])(
+    'maps a destination in the active site and locale: %s',
+    (destination, locale, segment, apiLocale) => {
+        const {hook} = loadHook({destination, locale})
+        const doc = searchDocument()
+        hook(doc)
+        expect(doc.searchPhraseSuggestions.c_redirectMapping.value[0]).toMatchObject({
+            apiFamily: 'site',
+            apiName: 'shopper-seo',
+            apiVersion: 'v1',
+            resourcePath: 'url-mapping',
+            parameters: {siteId: 'RefArch', locale: apiLocale, urlSegment: segment}
+        })
+        expect(doc.searchPhraseSuggestions.c_redirectUrl).toBe(destination)
+    }
+)
+
+test.each([
+    'https://external.example/s/RefArch/en-us/dresses/',
+    'http://sandbox.example/s/RefArch/en-us/dresses/',
+    'https://sandbox.example/s/OtherSite/en-us/dresses/',
+    'https://sandbox.example@external.example/s/RefArch/dresses/',
+    'javascript:alert(1)',
+    '/app-route',
+    '//external.example/dresses/',
+    'https://sandbox.example/s/RefArch/en-us/'
+])('keeps an unmappable destination URL without scheduling an include: %s', (destination) => {
+    const {hook} = loadHook({destination})
+    const doc = searchDocument()
+    hook(doc)
+    expect(doc.searchPhraseSuggestions.c_redirectUrl).toBe(destination)
+    expect(doc.searchPhraseSuggestions.c_redirectMapping).toBeUndefined()
+})
+
+test('preserves URL metadata and logs a correlated warning when include setup fails', () => {
+    const {hook, logs} = loadHook({includeFailure: new Error('private include detail')})
+    const doc = searchDocument()
+    hook(doc)
+    expect(doc.searchPhraseSuggestions.c_redirectUrl).toBe(PRODUCT_URL)
+    expect(doc.searchPhraseSuggestions.c_redirectMapping).toBeUndefined()
+    expect(JSON.stringify(logs.filter(({level}) => level === 'warn'))).toContain(
+        'mapping_setup_failed'
+    )
+    expect(JSON.stringify(logs)).not.toContain('private include detail')
 })
