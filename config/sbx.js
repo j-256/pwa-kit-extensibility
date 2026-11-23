@@ -20,6 +20,13 @@ module.exports = {
         // via PWA_KIT_SLAS_CLIENT_SECRET (set on the sbx MRT env, and locally for
         // dev). Set to false to switch this environment to a public PKCE client
         useSLASPrivateClient: true,
+        searchRedirects: {
+            ...defaultConfig.app.searchRedirects,
+            commerceOrigins: [
+                'https://zzcu-256.my.commercecloud.salesforce.com',
+                'https://zzcu-256.dx.commercecloud.salesforce.com'
+            ]
+        },
         commerceAPI: {
             ...defaultConfig.app.commerceAPI,
             parameters: {

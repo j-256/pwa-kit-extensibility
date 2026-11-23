@@ -9,6 +9,7 @@
 const base = require('@salesforce/pwa-kit-dev/configs/jest/jest.config.js')
 const TRANSFORM_PACKAGES = [
     '@salesforce/retail-react-app',
+    '@salesforce/cc-datacloud-typescript',
     'decode-uri-component',
     'filter-obj',
     'query-string',

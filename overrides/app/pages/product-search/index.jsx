@@ -10,6 +10,7 @@ import {
 } from '@salesforce/retail-react-app/app/components/shared/ui'
 import {useProductSearch} from '@salesforce/commerce-sdk-react'
 import {useLocation} from 'react-router-dom'
+import useSearchRedirect from '../../hooks/use-search-redirect'
 
 // How many products to show when no limit is specified in the query string
 const DEFAULT_LIMIT = 12
@@ -24,6 +25,7 @@ const ProductSearchPage = () => {
         data: searchResult,
         isLoading: loading,
         isError,
+        isPreviousData,
         error
     } = useProductSearch({
         parameters: {
@@ -34,12 +36,19 @@ const ProductSearchPage = () => {
             expand: ['prices', 'images', 'variations', 'custom_properties']
         }
     })
+    const {isResolving: isResolvingRedirect} = useSearchRedirect({
+        query: params.get('q'),
+        searchResult,
+        isLoading: loading,
+        isPreviousData
+    })
     const products = searchResult?.hits || []
     const resultCount = searchResult?.hits?.length || 0
     const searchTotal = searchResult?.total || 0
 
     return (
         <Box
+            aria-busy={isResolvingRedirect}
             maxW="900px"
             mx="auto"
             mt={10}
@@ -58,9 +67,12 @@ const ProductSearchPage = () => {
             {isError && (
                 <Text color="red.500">Error: {error?.message || 'Failed to fetch products.'}</Text>
             )}
+            {isResolvingRedirect && <Spinner label="Loading" />}
             <SimpleGrid columns={{base: 1, sm: 2, md: 3}} spacing={6}>
                 {loading && Array(resultCount).map((_, i) => <Skeleton key={i} height="200px" />)}
-                {!loading && products.length === 0 && !isError && <Text>No products found.</Text>}
+                {!loading && !isResolvingRedirect && products.length === 0 && !isError && (
+                    <Text>No products found.</Text>
+                )}
                 {products.map((product) => (
                     <Box
                         key={product.productId}

@@ -18,6 +18,7 @@ const fallback = <Skeleton height="75vh" width="100%" />
 
 // Custom pages
 const Test = loadable(() => import('./pages/test'), {fallback})
+const ProductList = loadable(() => import('./pages/product-list'), {fallback})
 const ProductSearch = loadable(() => import('./pages/product-search'), {fallback})
 
 const PageNotFound = loadable(() => import('@salesforce/retail-react-app/app/pages/page-not-found'))
@@ -28,7 +29,11 @@ export default () => {
         [
             {path: '/test', component: Test, exact: true},
             {path: '/product-search', component: ProductSearch, exact: true},
-            ..._routes,
+            ..._routes.map((route) =>
+                route.path === '/search' || route.path === '/category/:categoryId'
+                    ? {...route, component: ProductList}
+                    : route
+            ),
             ...getDynamicRoutes(config)
         ],
         config,

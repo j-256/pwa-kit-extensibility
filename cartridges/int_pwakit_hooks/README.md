@@ -19,7 +19,28 @@ A matching response keeps HTTP 200 and the normal search document, adding:
 
 Existing suggestions, hits, totals, limits, refinements, sorting, and unrelated custom properties are preserved. No match produces no redirect metadata. Absent or whitespace-only keywords and category-only requests leave the response unchanged. The hook returns no value, allowing subsequent hooks to run. Lookup failures retain normal results and log a correlated error. See [hook return semantics](https://developer.salesforce.com/docs/commerce/commerce-api/guide/extensibility_via_hooks.html) and [custom properties on Suggestion documents](https://developer.salesforce.com/docs/commerce/commerce-api/guide/custom-properties.html).
 
-This cartridge does not issue a browser HTTP redirect or provide PWA navigation. The destination status returned by the Script API lookup does not change the product-search HTTP status. The PWA must eventually resolve and navigate to the destination, falling back to the retained search results when resolution fails.
+This cartridge does not issue a browser HTTP redirect or provide PWA navigation. The destination status returned by the Script API lookup does not change the product-search HTTP status. The PWA resolves and navigates to supported destinations independently, falling back to the retained search results when resolution fails.
+
+## PWA navigation
+
+Both the standard `/search` PLP and the `/product-search` demo consume this contract through `overrides/app/hooks/use-search-redirect.js`. The standard PLP override retains the template's search request, refinements, sorting, pagination, and inventory filter. Category browsing does not apply keyword redirects. A nonempty query, matching response query, strict `c_isRedirect: true`, and destination URL are required; retained data from a previous query cannot trigger navigation.
+
+Configure trusted origins in the target application's `app.searchRedirects` configuration:
+
+```js
+searchRedirects: {
+    commerceOrigins: ['https://commerce.example'],
+    externalOrigins: []
+}
+```
+
+List exact Commerce storefront origins, including any direct-instance origin that the merchant's generated destinations actually use. These are trust decisions, not hostname suffix patterns. Leave `externalOrigins` empty unless external HTTPS navigation is intentional; add only reviewed origins. Configure the PWA's site, supported locales, and URL locale representation for the same site used by shopper requests. A locale omitted from the configured URL representation cannot be preserved in a destination link; use a locale path or query parameter when supporting multiple locales. Verify `sfcc.shopper-seo` on the SLAS client the PWA actually uses, with a fresh shopper token. A grant on another test client is insufficient.
+
+Initial requests render the search page with HTTP 200 and hydrate normally. Mapping and navigation run only in browser effects; this implementation provides no server HTTP redirect or permanent redirect status. A resolved internal target in the active locale uses router `replace`, with `directedFrom` in route state. A different locale uses document replacement, including the router base path, so the application's locale and API providers reload in the destination locale. An explicitly allowed external target also uses `window.location.replace`. Back returns to the preceding useful page instead of the transient search entry. The merchant mapping's status does not change that history policy.
+
+Search results remain available during resolution, with a loading indicator and `aria-busy`. Empty-result presentation and PLP view analytics wait for the redirect decision. Mapping errors, missing mappings, unsupported/unsafe destinations, and a five-second resolution timeout retain the search page and release its normal analytics. Successful redirecting searches do not emit a PLP view. Decisions are scoped to the location entry, query, site, locale, and destination; late results after query changes, navigation, unmounting, or timeout cannot navigate. Repeated effects share a single attempt, and failed decisions do not retry on every render. No catch-all route is installed.
+
+The `pwa-search-redirect` logger uses namespace `searchRedirect.resolve`. It emits one terminal diagnostic per handled decision, containing outcome, a bounded reason, HTTP status when available, elapsed milliseconds, and correlation ID. It omits phrases, URLs, raw error objects, tokens, and credentials. Stale or unmounted decisions are discarded. Search and mapping remain separate requests, so a Shopper SEO failure cannot turn a valid product-search response into a failure.
 
 ## Installation and release
 
@@ -41,13 +62,13 @@ This cartridge does not issue a browser HTTP redirect or provide PWA navigation.
 
 Search-driven redirects select a destination from a keyword. A future catch-all route would resolve an incoming URL using Shopper SEO [`getUrlMapping`](https://developer.salesforce.com/docs/commerce/commerce-api/guide/url-resolution.html) after explicit application routes have failed. That API applies URL rules and URL redirects; it does not replace search-keyword matching. No SEO hook or catch-all route is required to add this search hook.
 
-Both flows can eventually share destination validation, site/locale-aware path normalization, mapping requests, resource-to-route conversion, redirect-chain limits, and diagnostics. The Script API lookup exposes a URL and status, not a destination resource ID. For internal Commerce destinations, keep the prescribed product-search response followed by a shopper URL-mapping request. Do not infer IDs from URL segments, use `URLRedirectMgr` as an arbitrary URL resolver, or add a hook-to-SCAPI network request.
+Both flows can share destination validation, site/locale-aware path normalization, mapping requests, resource-to-route conversion, redirect-chain limits, and diagnostics. The Script API lookup exposes a URL and status, not a destination resource ID. For internal Commerce destinations, keep the prescribed product-search response followed by a shopper URL-mapping request. Do not infer IDs from URL segments, use `URLRedirectMgr` as an arbitrary URL resolver, or add a hook-to-SCAPI network request.
 
 The shared PWA resolver lives in `overrides/app/utils/commerce-destination.js`. It accepts an authenticated `getUrlMapping` callback and the application's site/locale URL builder. It strips the selected site's `/s/{siteId}/` prefix and configured supported locale IDs or aliases, including hyphen/underscore locale variants, without decoding the remaining SEO path. Lowercase and uppercase product/category resource types are supported. Category refinements become `refine` query parameters; content and pipeline destinations retain the search page.
 
 Explicit `commerceOrigins` identify trusted Commerce origins. Relative destinations use the application origin. An unrelated origin is never mapped into a local resource, even when its path resembles a Commerce site URL. External navigation is restricted to HTTPS origins explicitly listed in `externalOrigins`; the default external allowlist is empty. Protocol-relative URLs, credentials in URLs, unsafe schemes, control characters, and malformed encoding are rejected.
 
-URI redirects without resource IDs can require another mapping request. The resolver follows at most five mappings, detects repeated locale/path pairs, and supports redirect statuses 301, 302, and 307, including string values. It preserves destination query strings and fragments, copies source parameters only when requested, and adds missing parameter pairs without duplicating additions already present in `destinationUrl`. A resource redirect uses its mapped ID directly. These mapping statuses describe the merchant redirect; they do not change the search response's HTTP status. Search-to-search destinations are rejected to prevent navigation loops.
+URI redirects without resource IDs can require another mapping request. The resolver follows at most five mappings, detects repeated locale/path pairs, and supports redirect statuses 301, 302, and 307, including string values. It preserves raw query encodings, repeated parameter pairs, and fragments, copies source parameters only when requested, and adds missing parameter pairs without duplicating additions already present in `destinationUrl`. A resource redirect uses its mapped ID directly. These mapping statuses describe the merchant redirect; they do not change the search response's HTTP status. Search-to-search destinations are rejected to prevent navigation loops.
 
 Keep URL mapping outside the response hook so an optional destination lookup cannot fail an otherwise valid search. A SCAPI remote include can save a client round trip, but its deferred execution means the hook cannot catch an included request failure. Most non-200 include responses other than 404 cause the entire search request to return HTTP 500; the latency benefit does not justify that failure coupling. See [`RemoteInclude` error handling](https://developer.salesforce.com/docs/commerce/b2c-commerce/references/b2c-script-api/dw.system.RemoteInclude.html).
 
@@ -60,7 +81,11 @@ Run the focused boundary tests and static checks:
 ```bash
 npm test -- -- --watch=false --coverage=false --runTestsByPath tests/cartridges/product-search.test.js scripts/deploy-cartridge.test.js
 npx eslint cartridges/int_pwakit_hooks/cartridge/scripts/hooks/productSearch.js tests/cartridges/product-search.test.js scripts/deploy-cartridge.js scripts/deploy-cartridge.test.js
+npm test -- -- --watch=false --coverage=false --runTestsByPath overrides/app/utils/commerce-destination.test.js overrides/app/hooks/use-search-redirect.test.jsx overrides/app/pages/product-list/index.test.jsx overrides/app/routes.test.js
+npx eslint overrides/app/utils/commerce-destination.js overrides/app/hooks/use-search-redirect.js overrides/app/pages/product-list/index.jsx overrides/app/pages/product-search/index.jsx overrides/app/routes.jsx
 ```
+
+The PLP tests exercise the override with the template's behavior checks. Their optional Page Designer runtime is stubbed outside the tested interactions; they retain the template's skipped unauthenticated-wishlist case. Browser qualification must cover direct entry and header search, product/category targets, supported locales, encoded state, Back behavior, query changes while mapping is pending, and retained results after mapping failure. Check desktop/mobile rendering, empty and unmatched searches, refinements, pagination, and sorting. Keep environment-specific evidence and temporary merchant fixture snapshots outside the repository; restore fixtures after qualification. Content/pipeline navigation and successful default-keyword locale fallback require separate qualification.
 
 Use direct product-search requests to compare a matching online rule, a normal unmatched query, an offline rule, an absent/empty keyword with a category refinement, and different enabled locales. A matching query with multiple hits must retain those hits, totals, sorting, and refinements. Verify product/category destinations with Shopper SEO separately; a correct search response does not prove that mapping permissions or frontend routes are configured.
 

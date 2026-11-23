@@ -70,6 +70,10 @@ module.exports = {
                 landingPath: '/reset-password-landing'
             }
         },
+        searchRedirects: {
+            commerceOrigins: [],
+            externalOrigins: []
+        },
         defaultSite: 'RefArchJ',
         sites,
         commerceAPI: {
