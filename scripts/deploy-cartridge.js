@@ -10,17 +10,20 @@ const {spawnSync} = require('child_process')
 const {parseArgs} = require('util')
 
 const ROOT = path.resolve(__dirname, '..')
-const CARTRIDGE = 'app_pwakit_base'
+const DEFAULT_CARTRIDGE = 'app_pwakit_base'
+const LOCAL_HOOKS_CARTRIDGE = 'int_pwakit_hooks'
+const CARTRIDGES = [DEFAULT_CARTRIDGE, LOCAL_HOOKS_CARTRIDGE]
 const EXIT = Object.freeze({RUNTIME: 1, USAGE: 2, DEPENDENCY: 3})
 const CONNECTION_OPTIONS = ['instance', 'config', 'server', 'webdav-server', 'certificate']
 const USAGE = `Usage: npm run deploy:cartridge -- [options]
 
-Upload ${CARTRIDGE} from this project or its installed extensibility template.
+Upload a selected cartridge from this project or its installed extensibility template.
 Requires the b2c CLI (npm install --global @salesforce/b2c-cli) for upload.
 
 Options:
+  -c, --cartridge <name>     ${CARTRIDGES.join(' or ')} (default: ${DEFAULT_CARTRIDGE})
   -v, --code-version <name>  code version to upload to (or exported SFCC_CODE_VERSION)
-  -i, --instance <name>      named B2C CLI instance, e.g. zzcu_256 or bkwp_stg
+  -i, --instance <name>      named B2C CLI connection, e.g. sandbox or staging
   -C, --config <path>        B2C CLI connection file, in dw.json format
   -s, --server <hostname>    override the configured instance hostname
       --webdav-server <host> separate WebDAV hostname for certificate endpoints
@@ -47,7 +50,7 @@ Activation/reload requires the API credentials and permissions documented by b2c
 Exit status:
   0  success or dry run
   1  runtime failure or terminated CLI
-  2  usage error or missing cartridge/code version
+  2  usage error or unsupported/missing cartridge/code version
   3  b2c executable missing
   Other b2c exit statuses are preserved.
 `
@@ -56,19 +59,22 @@ function fail(code, message) {
     throw Object.assign(new Error(message), {exitCode: code})
 }
 
-function resolveSource() {
-    let source = path.join(ROOT, 'cartridges', CARTRIDGE)
+function resolveSource(cartridge) {
+    let source = path.join(ROOT, 'cartridges', cartridge)
     if (!fs.existsSync(source)) {
+        if (cartridge === LOCAL_HOOKS_CARTRIDGE) {
+            fail(EXIT.USAGE, `missing local ${cartridge} cartridge`)
+        }
         const template = require(path.join(ROOT, 'package.json')).ccExtensibility?.extends
         if (!template)
-            fail(EXIT.USAGE, `no local ${CARTRIDGE} or extensibility template configured`)
+            fail(EXIT.USAGE, `no local ${cartridge} or extensibility template configured`)
         let templatePackage
         try {
             templatePackage = require.resolve(`${template}/package.json`, {paths: [ROOT]})
         } catch {
             fail(EXIT.USAGE, `template ${template} is not installed; run npm ci`)
         }
-        source = path.join(path.dirname(templatePackage), 'cartridges', CARTRIDGE)
+        source = path.join(path.dirname(templatePackage), 'cartridges', cartridge)
     }
     if (!fs.existsSync(path.join(source, '.project'))) {
         fail(
@@ -106,6 +112,7 @@ function main() {
     try {
         const parsed = parseArgs({
             options: {
+                cartridge: {type: 'string', short: 'c'},
                 'code-version': {type: 'string', short: 'v'},
                 instance: {type: 'string', short: 'i'},
                 config: {type: 'string', short: 'C'},
@@ -134,9 +141,14 @@ function main() {
     if (!version?.trim()) fail(EXIT.USAGE, 'provide --code-version or SFCC_CODE_VERSION')
     if (values.activate && values.reload) fail(EXIT.USAGE, 'choose either --activate or --reload')
 
+    const cartridge = values.cartridge || DEFAULT_CARTRIDGE
+    if (!CARTRIDGES.includes(cartridge)) {
+        fail(EXIT.USAGE, `--cartridge must be ${CARTRIDGES.join(' or ')}`)
+    }
+
     const auth = authentication(values.instance || process.env.SFCC_INSTANCE)
-    const source = resolveSource()
-    const args = ['code', 'deploy', source, '--cartridge', CARTRIDGE, '--code-version', version]
+    const source = resolveSource(cartridge)
+    const args = ['code', 'deploy', source, '--cartridge', cartridge, '--code-version', version]
     for (const name of CONNECTION_OPTIONS) {
         if (values[name]) args.push(`--${name}`, values[name])
     }
@@ -153,7 +165,7 @@ function main() {
         return 0
     }
 
-    process.stderr.write(`deploy-cartridge: uploading ${CARTRIDGE} from ${source}\n`)
+    process.stderr.write(`deploy-cartridge: uploading ${cartridge} from ${source}\n`)
     const result = spawnSync('b2c', args, {cwd: ROOT, env: auth.env, stdio: 'inherit'})
     if (result.error?.code === 'ENOENT') {
         fail(

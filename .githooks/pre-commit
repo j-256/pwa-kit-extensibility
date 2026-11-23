@@ -1,0 +1,2 @@
+#!/bin/bash
+exec node scripts/check-public-identifiers.js --staged

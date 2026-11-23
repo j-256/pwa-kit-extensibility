@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+    <name>int_pwakit_hooks</name>
+    <comment></comment>
+    <projects></projects>
+    <buildSpec></buildSpec>
+    <natures>
+        <nature>com.demandware.studio.core.beehiveNature</nature>
+    </natures>
+</projectDescription>

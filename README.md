@@ -65,6 +65,8 @@ To recover, clear site data for `http://localhost:3000` (DevTools > Application 
 
 ## Verification
 
+Run `npm run check:public-docs` to check public Markdown and deployment CLI source for recognizable installation identifiers. The provided commit hook checks staged content, and a separate CI workflow covers documentation-only changes. Follow the [project guidance](AGENTS.md) to install the checker without replacing existing hooks. Use generic examples and keep installation details in private operational records; the guidance describes that boundary and the guard's limits.
+
 Run the supported checks before committing:
 
 ```sh
@@ -87,19 +89,20 @@ Retail React App 11's callback email delivery uses the `app_pwakit_base` cartrid
 
 ## B2C cartridge upload
 
-`npm run deploy:cartridge` uploads only `app_pwakit_base` using the installed [B2C CLI](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/code.html). It uses `cartridges/app_pwakit_base` when present; otherwise, it resolves the cartridge inside the installed `ccExtensibility.extends` template. Run `npm ci` first for an extensibility project. A storefront build is not required.
+`npm run deploy:cartridge` uploads one selected cartridge using the installed [B2C CLI](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/code.html). The default is `app_pwakit_base`: it uses `cartridges/app_pwakit_base` when present; otherwise, it resolves the cartridge inside the installed `ccExtensibility.extends` template. Select `--cartridge int_pwakit_hooks` to upload this project's [SCAPI hooks cartridge](cartridges/int_pwakit_hooks/README.md), which must exist locally. Run `npm ci` first for an extensibility project. A storefront build is not required.
 
-Install the CLI with `npm install --global @salesforce/b2c-cli`. Configure named connections such as `zzcu_256` and `bkwp_stg` using the CLI's project or shared `dw.json` configuration, with the appropriate hostname for each instance. Project connection files and P12/PFX files are ignored by Git. Keep certificate files and credentials in protected storage.
+Install the CLI with `npm install --global @salesforce/b2c-cli`. Configure named connections such as `sandbox` and `staging` using the CLI's project or shared `dw.json` configuration, with the appropriate hostname for each instance. Project connection files and P12/PFX files are ignored by Git. Keep certificate files and credentials in protected storage.
 
-For `--instance <name>` or an exported `SFCC_INSTANCE`, the wrapper maps a complete exported `WEBDAV_USER_<name>` / `WEBDAV_PASS_<name>` pair to the CLI's `SFCC_USERNAME` / `SFCC_PASSWORD`. This supports `WEBDAV_USER_zzcu_256` / `WEBDAV_PASS_zzcu_256` and `WEBDAV_USER_bkwp_stg` / `WEBDAV_PASS_bkwp_stg` without copying credential values into files. The selected pair overrides generic WebDAV credentials; a partially configured or empty pair fails before upload. If neither variable is present, the CLI uses its native authentication configuration. The connection file still supplies the hostname and optional certificate settings. Dry-run output identifies the selected credential-variable names without printing their values.
+For `--instance <name>` or an exported `SFCC_INSTANCE`, the wrapper maps a complete exported `WEBDAV_USER_<name>` / `WEBDAV_PASS_<name>` pair to the CLI's `SFCC_USERNAME` / `SFCC_PASSWORD`. For example, a connection named `sandbox` uses `WEBDAV_USER_sandbox` / `WEBDAV_PASS_sandbox` without copying credential values into files. The selected pair overrides generic WebDAV credentials; a partially configured or empty pair fails before upload. If neither variable is present, the CLI uses its native authentication configuration. The connection file still supplies the hostname and optional certificate settings. Dry-run output identifies the selected credential-variable names without printing their values.
 
 Inspect the selected connection's hostname and certificate settings, preview the upload, and then upload to an explicit code version:
 
 ```sh
-b2c setup inspect --instance zzcu_256
-npm run deploy:cartridge -- --instance zzcu_256 --code-version version1 --dry-run
-npm run deploy:cartridge -- --instance zzcu_256 --code-version version1
-npm run deploy:cartridge -- --instance bkwp_stg --code-version version1
+b2c setup inspect --instance sandbox
+npm run deploy:cartridge -- --instance sandbox --code-version version1 --dry-run
+npm run deploy:cartridge -- --instance sandbox --code-version version1
+npm run deploy:cartridge -- --instance staging --code-version version1
+npm run deploy:cartridge -- --cartridge int_pwakit_hooks --instance sandbox --code-version version1 --dry-run
 ```
 
 Replace `version1` with the reviewed target code version. `--code-version` or an exported `SFCC_CODE_VERSION` is required; the wrapper does not discover the active version. A dry run prints the source and command without invoking the CLI or checking the remote connection. `--config` selects a different connection file, and `--server` overrides the instance hostname. The mapped WebDAV pair takes precedence over `SFCC_USERNAME` and `SFCC_PASSWORD`. Other shell `SFCC_*` variables and the CLI's project `.env` can override connection-file values; inspect the effective configuration when switching instances. The wrapper does not expand `${VAR}` references in B2C connection files or load the storefront's `.env.<target>` overlays. The wrapper resolves paths and runs the CLI from the project root.
@@ -109,6 +112,8 @@ For certificate-based MFA, configure `certificate` and `certificate-passphrase` 
 Upload does not import preference metadata, modify a site's cartridge path, configure a notify client, or enable email features. Add `--activate` or `--reload` only when intending that operation; these require API credentials and permissions, and reload needs another code version to toggle through. Follow the cartridge's installation instructions for the remaining backend setup. Email delivery assumes the shopper login is the recipient email, matching the upstream cartridge.
 
 Run `npm run deploy:cartridge -- --help` for options and exit statuses. Verify the wrapper with `npm test -- -- --watch=false --coverage=false --runTestsByPath scripts/deploy-cartridge.test.js`.
+
+Search-driven redirects are exposed as SCAPI metadata by `int_pwakit_hooks`; the PWA does not consume that metadata. Test on a sandbox, deploy to staging, and promote code to production using Code Replication started in Business Manager. The [cartridge guide](cartridges/int_pwakit_hooks/README.md) describes the response contract, setup prerequisites, verification, and overlap with a future Shopper SEO URL fallback.
 
 ## Managed Runtime deployment
 

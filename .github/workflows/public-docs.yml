@@ -1,0 +1,33 @@
+name: Public documentation
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - '**/*.md'
+            - '**/*.mdx'
+            - 'scripts/check-public-identifiers.js'
+            - 'scripts/deploy-cartridge.js'
+            - '.github/workflows/public-docs.yml'
+    pull_request:
+        branches: [main]
+        paths:
+            - '**/*.md'
+            - '**/*.mdx'
+            - 'scripts/check-public-identifiers.js'
+            - 'scripts/deploy-cartridge.js'
+            - '.github/workflows/public-docs.yml'
+
+permissions:
+    contents: read
+
+jobs:
+    identifiers:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7.1.0
+              with:
+                  node-version: '24'
+            - run: node scripts/check-public-identifiers.js

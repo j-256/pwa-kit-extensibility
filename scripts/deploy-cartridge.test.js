@@ -84,7 +84,7 @@ test('uploads only the local cartridge from the project root, passing native con
     const result = run(
         [
             '-i',
-            'zzcu_256',
+            'sandbox',
             '-v',
             'reviewed',
             '--config',
@@ -113,7 +113,7 @@ test('uploads only the local cartridge from the project root, passing native con
             '--code-version',
             'reviewed',
             '--instance',
-            'zzcu_256',
+            'sandbox',
             '--config',
             config,
             '--server',
@@ -146,7 +146,7 @@ test('uses the installed extensibility template cartridge without copying it int
         path.join(template, 'package.json'),
         JSON.stringify({name: '@salesforce/retail-react-app'})
     )
-    const result = run(['--code-version=reviewed', '--instance=bkwp_stg', '--activate'])
+    const result = run(['--code-version=reviewed', '--instance=staging', '--activate'])
     expect(result.status).toBe(0)
     expect(captured().args).toEqual([
         'code',
@@ -157,7 +157,7 @@ test('uses the installed extensibility template cartridge without copying it int
         '--code-version',
         'reviewed',
         '--instance',
-        'bkwp_stg',
+        'staging',
         '--activate'
     ])
     expect(fs.existsSync(path.join(root, 'cartridges'))).toBe(false)
@@ -173,6 +173,59 @@ test('prefers the local cartridge when a template is also configured', () => {
     )
     expect(run(['-vreviewed']).status).toBe(0)
     expect(captured().args[2]).toBe(source)
+})
+
+test.each([
+    ['--cartridge', 'int_pwakit_hooks'],
+    ['--cartridge=int_pwakit_hooks'],
+    ['-cint_pwakit_hooks']
+])('uploads the selected local hooks cartridge: %j', (...selection) => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const source = cartridge(path.join(root, 'cartridges/int_pwakit_hooks'))
+    const result = run([...selection, '-v', 'reviewed', '-i', 'sandbox'], {
+        WEBDAV_USER_sandbox: 'fixture-target-user',
+        WEBDAV_PASS_sandbox: 'fixture-target-key'
+    })
+    expect(result.status).toBe(0)
+    expect(captured()).toMatchObject({
+        args: [
+            'code',
+            'deploy',
+            source,
+            '--cartridge',
+            'int_pwakit_hooks',
+            '--code-version',
+            'reviewed',
+            '--instance',
+            'sandbox'
+        ],
+        username: 'fixture-target-user',
+        password: 'fixture-target-key'
+    })
+})
+
+test.each(['../outside', '/tmp/other', 'unrelated', ''])(
+    'rejects unsupported cartridge %j',
+    (name) => {
+        cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+        const result = run(['--cartridge', name, '-v', 'reviewed'])
+        expect(result.status).toBe(2)
+        expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+    }
+)
+
+test('requires the project-owned cartridge locally rather than falling back to a template', () => {
+    const template = path.join(root, 'node_modules/fixture-template')
+    cartridge(path.join(template, 'cartridges/int_pwakit_hooks'))
+    fs.writeFileSync(path.join(template, 'package.json'), '{"name":"fixture-template"}')
+    fs.writeFileSync(
+        path.join(root, 'package.json'),
+        '{"ccExtensibility":{"extends":"fixture-template"}}'
+    )
+    const result = run(['-c', 'int_pwakit_hooks', '-v', 'reviewed'])
+    expect(result.status).toBe(2)
+    expect(result.stderr).toContain('local int_pwakit_hooks')
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
 })
 
 test.each([
@@ -252,31 +305,28 @@ test('reports a terminated CLI as a runtime failure', () => {
     expect(result.stderr).toContain('SIGTERM')
 })
 
-test.each(['zzcu_256', 'bkwp_stg'])(
-    'maps the selected instance credential pair: %s',
-    (instance) => {
-        cartridge(path.join(root, 'cartridges/app_pwakit_base'))
-        const result = run(['-i', instance, '-v', 'reviewed'], {
-            [`WEBDAV_USER_${instance}`]: 'fixture-target-user',
-            [`WEBDAV_PASS_${instance}`]: 'fixture-target-key',
-            SFCC_USERNAME: 'stale-user',
-            SFCC_PASSWORD: 'stale-key'
-        })
-        expect(result.status).toBe(0)
-        expect(captured()).toMatchObject({
-            username: 'fixture-target-user',
-            password: 'fixture-target-key'
-        })
-        expect(result.stdout + result.stderr).not.toContain('fixture-target-key')
-    }
-)
+test.each(['sandbox', 'staging'])('maps the selected instance credential pair: %s', (instance) => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const result = run(['-i', instance, '-v', 'reviewed'], {
+        [`WEBDAV_USER_${instance}`]: 'fixture-target-user',
+        [`WEBDAV_PASS_${instance}`]: 'fixture-target-key',
+        SFCC_USERNAME: 'stale-user',
+        SFCC_PASSWORD: 'stale-key'
+    })
+    expect(result.status).toBe(0)
+    expect(captured()).toMatchObject({
+        username: 'fixture-target-user',
+        password: 'fixture-target-key'
+    })
+    expect(result.stdout + result.stderr).not.toContain('fixture-target-key')
+})
 
 test('maps credentials for an instance selected through SFCC_INSTANCE', () => {
     cartridge(path.join(root, 'cartridges/app_pwakit_base'))
     const result = run(['-v', 'reviewed'], {
-        SFCC_INSTANCE: 'zzcu_256',
-        WEBDAV_USER_zzcu_256: 'fixture-target-user',
-        WEBDAV_PASS_zzcu_256: 'fixture-target-key'
+        SFCC_INSTANCE: 'sandbox',
+        WEBDAV_USER_sandbox: 'fixture-target-user',
+        WEBDAV_PASS_sandbox: 'fixture-target-key'
     })
     expect(result.status).toBe(0)
     expect(captured()).toMatchObject({
@@ -286,28 +336,28 @@ test('maps credentials for an instance selected through SFCC_INSTANCE', () => {
 })
 
 test.each([
-    {WEBDAV_USER_zzcu_256: 'fixture-target-user'},
-    {WEBDAV_PASS_zzcu_256: 'fixture-target-key'},
-    {WEBDAV_USER_zzcu_256: '', WEBDAV_PASS_zzcu_256: ''}
+    {WEBDAV_USER_sandbox: 'fixture-target-user'},
+    {WEBDAV_PASS_sandbox: 'fixture-target-key'},
+    {WEBDAV_USER_sandbox: '', WEBDAV_PASS_sandbox: ''}
 ])('rejects partial or empty instance credentials without invoking b2c', (aliases) => {
     cartridge(path.join(root, 'cartridges/app_pwakit_base'))
-    const result = run(['-i', 'zzcu_256', '-v', 'reviewed'], aliases)
+    const result = run(['-i', 'sandbox', '-v', 'reviewed'], aliases)
     expect(result.status).toBe(2)
-    expect(result.stderr).toContain('WEBDAV_USER_zzcu_256')
-    expect(result.stderr).toContain('WEBDAV_PASS_zzcu_256')
+    expect(result.stderr).toContain('WEBDAV_USER_sandbox')
+    expect(result.stderr).toContain('WEBDAV_PASS_sandbox')
     expect(result.stderr).not.toContain('fixture-target-key')
     expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
 })
 
 test('dry-run shows the authentication source without exposing credentials', () => {
     cartridge(path.join(root, 'cartridges/app_pwakit_base'))
-    const result = run(['-i', 'zzcu_256', '-v', 'reviewed', '-n'], {
-        WEBDAV_USER_zzcu_256: 'fixture-target-user',
-        WEBDAV_PASS_zzcu_256: 'fixture-target-key'
+    const result = run(['-i', 'sandbox', '-v', 'reviewed', '-n'], {
+        WEBDAV_USER_sandbox: 'fixture-target-user',
+        WEBDAV_PASS_sandbox: 'fixture-target-key'
     })
     expect(result.status).toBe(0)
     expect(JSON.parse(result.stdout).authentication).toBe(
-        'WEBDAV_USER_zzcu_256 + WEBDAV_PASS_zzcu_256'
+        'WEBDAV_USER_sandbox + WEBDAV_PASS_sandbox'
     )
     expect(result.stdout).not.toContain('fixture-target-user')
     expect(result.stdout).not.toContain('fixture-target-key')

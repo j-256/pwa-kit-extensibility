@@ -1,0 +1,8 @@
+{
+    "name": "int_pwakit_hooks",
+    "version": "1.0.0",
+    "private": true,
+    "license": "BSD-3-Clause",
+    "description": "Project-owned PWA Kit SCAPI hooks",
+    "hooks": "./hooks.json"
+}

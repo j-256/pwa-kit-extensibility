@@ -105,6 +105,7 @@
     "build": "npm run build-translations && pwa-kit-dev build",
     "postbuild": "npm run check-bundle",
     "check-bundle": "node scripts/check-bundle.js",
+    "check:public-docs": "node scripts/check-public-identifiers.js",
     "build-nt": "pwa-kit-dev build && npm run check-bundle",
     "build-start": "pwa-kit-dev build && npm run start",
     "build-map": "cross-env PWA_KIT_SOURCE_MAP=true npm run build",
