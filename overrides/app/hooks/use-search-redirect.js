@@ -28,6 +28,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
     const {correlationId} = useCorrelationId()
     const settings = getConfig().app.searchRedirects || {}
     const suggestions = searchResult?.searchPhraseSuggestions
+    // Require a response for the visible keyword query so retained search data cannot redirect
     const eligible =
         isSearch &&
         !!query?.trim() &&
@@ -39,10 +40,13 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
         typeof suggestions.c_redirectUrl === 'string' &&
         !!suggestions.c_redirectUrl
     const entry = locationIdentity(location)
+    // Bind each decision to a history entry as well as its search and destination context
     const decision = eligible
         ? JSON.stringify([entry, site.id, locale.id, query, suggestions.c_redirectUrl])
         : ''
     const latest = useRef()
+    // Read fresh dependencies without restarting a decision when object identities change
+    // Async work captures its context below and checks this ref before applying its result
     latest.current = {
         decision,
         entry,
@@ -63,6 +67,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
         if (!decision) return
         const context = latest.current
         let attempt = attemptRef.current
+        // Reuse the promise across effect resubscriptions, including Strict Mode replay
         if (attempt?.decision !== decision) {
             attempt = {decision, started: Date.now(), expired: false, handled: false}
             attemptRef.current = attempt
@@ -71,6 +76,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
                 const targetLocale = context.site.l10n.supportedLocales.find(
                     ({id, alias}) => id === localeRef || alias === localeRef
                 )
+                // A nondefault locale needs an explicit URL representation to survive a reload
                 if (
                     targetLocale.id !== context.site.l10n.defaultLocale &&
                     !['path', 'query_param'].includes(app.url?.locale)
@@ -92,6 +98,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
                 })
             }
             let timer
+            // Bound token acquisition and mapping together; late results cannot navigate
             const timeout = new Promise((resolve) => {
                 timer = setTimeout(() => {
                     attempt.expired = true
@@ -111,6 +118,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
         }
         let subscribed = true
         attempt.promise.then((result) => {
+            // Discard stale or unmounted subscribers and handle each attempt only once
             if (
                 !subscribed ||
                 attempt.handled ||
@@ -143,6 +151,7 @@ const useSearchRedirect = ({query, searchResult, isPreviousData, isLoading, isSe
                 logger.info('Search redirect resolved', diagnostic)
                 if (result.kind === 'external') window.location.replace(result.url)
                 else if (result.localeId !== context.locale.id)
+                    // Reload to initialize the app in the destination locale
                     window.location.replace(`${getRouterBasePath()}${result.url}`)
                 else
                     history.replace(result.url, {

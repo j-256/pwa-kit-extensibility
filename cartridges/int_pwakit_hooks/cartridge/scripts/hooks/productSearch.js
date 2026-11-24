@@ -12,6 +12,7 @@ var SEARCH_QUERY_PARAMETER = 'q'
 var logger = Logger.getLogger('pwakit-hooks', 'searchRedirect')
 
 exports.modifyGETResponse = function (doc) {
+    // The extension point is shared with OCAPI, but this contract is SCAPI-only
     if (!request.isSCAPI()) return
 
     var parameters = request.httpParameterMap
@@ -26,6 +27,7 @@ exports.modifyGETResponse = function (doc) {
     var context = 'requestId={0} site={1} locale={2} outcome={3} elapsedMs={4}'
     var siteId = Site.getCurrent().ID
     try {
+        // Commerce owns keyword matching, locale fallback, and the calculated destination
         var redirect = SearchModel.getSearchRedirect(query)
         var location = redirect && redirect.getLocation()
         if (!location || !location.trim()) {
@@ -50,6 +52,7 @@ exports.modifyGETResponse = function (doc) {
                 c_redirectUrl: location
             }
         } else {
+            // Preserve standard suggestions and unrelated custom properties
             suggestions.c_isRedirect = true
             suggestions.c_redirectUrl = location
         }
@@ -62,6 +65,7 @@ exports.modifyGETResponse = function (doc) {
             Date.now() - started
         )
     } catch (error) {
+        // Keep normal search results usable and omit query text and URLs from diagnostics
         logger.error(
             context + ' errorType={5}',
             request.requestID,
