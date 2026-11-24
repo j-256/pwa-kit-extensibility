@@ -44,6 +44,7 @@ beforeEach(() => {
     for (const key of Object.keys(environment)) {
         if (key.startsWith('SFCC_') || key.startsWith('WEBDAV_')) delete environment[key]
     }
+    delete environment.PWA_KIT_CARTRIDGE_PREFLIGHT
     environment.PATH = path.join(root, 'bin')
     environment.CAPTURE_PATH = path.join(root, 'capture.json')
     fs.writeFileSync(
@@ -251,7 +252,7 @@ test.each([
         ],
         cwd: root
     })
-    expect(result.stderr).toBe('')
+    expect(result.stderr).toContain('preflight skipped for app_pwakit_base')
     expect(result.stdout).not.toContain(CERTIFICATE_PASSPHRASE)
     expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
 })
@@ -362,4 +363,116 @@ test('dry-run shows the authentication source without exposing credentials', () 
     expect(result.stdout).not.toContain('fixture-target-user')
     expect(result.stdout).not.toContain('fixture-target-key')
     expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+})
+
+function preflight() {
+    const executable = path.join(root, 'bin', 'review preflight')
+    fs.writeFileSync(
+        executable,
+        `#!${process.execPath}
+const fs = require('fs')
+fs.writeFileSync(process.env.PREFLIGHT_CAPTURE, JSON.stringify({
+    args: process.argv.slice(2),
+    cwd: process.cwd(),
+    uploaded: fs.existsSync(process.env.CAPTURE_PATH)
+}))
+process.stderr.write('preflight-diagnostic\\n')
+process.stdout.write('preflight-result\\n')
+if (process.env.PREFLIGHT_SIGNAL) process.kill(process.pid, 'SIGTERM')
+else process.exit(Number(process.env.PREFLIGHT_EXIT || 0))
+`,
+        {mode: 0o755}
+    )
+    return {
+        PWA_KIT_CARTRIDGE_PREFLIGHT: executable,
+        PREFLIGHT_CAPTURE: path.join(root, 'preflight.json')
+    }
+}
+
+test.each([[], ['--dry-run']])('runs a configured preflight before deployment: %j', (...mode) => {
+    const source = cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const config = preflight()
+    const result = run(['-v', 'reviewed', ...mode], config)
+    expect(result.status).toBe(0)
+    expect(JSON.parse(fs.readFileSync(config.PREFLIGHT_CAPTURE))).toEqual({
+        args: ['--project-root', root, '--cartridge', 'app_pwakit_base', '--source', source],
+        cwd: root,
+        uploaded: false
+    })
+    expect(result.stderr).toContain('running preflight for app_pwakit_base')
+    expect(result.stderr).toContain('preflight passed for app_pwakit_base')
+    expect(result.stderr.indexOf('running preflight')).toBeLessThan(
+        result.stderr.indexOf('preflight-diagnostic')
+    )
+    expect(result.stderr.indexOf('preflight-diagnostic')).toBeLessThan(
+        result.stderr.indexOf('preflight passed')
+    )
+    expect(result.stdout).not.toContain('preflight-diagnostic')
+    expect(result.stdout).not.toContain('preflight-result')
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(mode.length === 0)
+})
+
+test.each([[], ['--dry-run']])('blocks deployment when preflight fails: %j', (...mode) => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const result = run(['-v', 'reviewed', ...mode], {...preflight(), PREFLIGHT_EXIT: '4'})
+    expect(result.status).toBe(4)
+    expect(result.stderr).toContain('running preflight for app_pwakit_base')
+    expect(result.stderr).toContain('preflight failed')
+    expect(result.stderr).not.toContain('preflight passed')
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+})
+
+test.each(['', 'relative-checker', '/missing/checker'])(
+    'rejects unavailable configured preflight %j before upload',
+    (executable) => {
+        cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+        const result = run(['-v', 'reviewed'], {PWA_KIT_CARTRIDGE_PREFLIGHT: executable})
+        expect(result.status).not.toBe(0)
+        expect(result.stderr).toContain('preflight')
+        expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+    }
+)
+
+test('rejects a configured preflight without execute permission', () => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const config = preflight()
+    fs.chmodSync(config.PWA_KIT_CARTRIDGE_PREFLIGHT, 0o644)
+    const result = run(['-v', 'reviewed'], config)
+    expect(result.status).toBe(3)
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+})
+
+test('treats a terminated preflight as a runtime failure without uploading', () => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const result = run(['-v', 'reviewed'], {...preflight(), PREFLIGHT_SIGNAL: '1'})
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('SIGTERM')
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+})
+
+test('keeps help independent of configured preflight availability', () => {
+    const result = run(['--help'], {PWA_KIT_CARTRIDGE_PREFLIGHT: '/missing/checker'})
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('PWA_KIT_CARTRIDGE_PREFLIGHT')
+    expect(fs.existsSync(environment.CAPTURE_PATH)).toBe(false)
+})
+
+test('keeps dry-run stdout valid JSON when the preflight writes output', () => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const result = run(['-v', 'reviewed', '--dry-run'], preflight())
+    expect(result.status).toBe(0)
+    expect(JSON.parse(result.stdout).command[0]).toBe('b2c')
+    expect(result.stderr).toContain('preflight-result')
+})
+
+test.each([[], ['--dry-run']])('reports an unconfigured preflight distinctly: %j', (...mode) => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const result = run(['-v', 'reviewed', ...mode])
+    expect(result.status).toBe(0)
+    expect(result.stderr).toContain(
+        'preflight skipped for app_pwakit_base (PWA_KIT_CARTRIDGE_PREFLIGHT is unset)'
+    )
+    expect(result.stderr).not.toContain('running preflight')
+    expect(result.stderr).not.toContain('preflight passed')
+    expect(result.stdout).not.toContain('preflight skipped')
 })
