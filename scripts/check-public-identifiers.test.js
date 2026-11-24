@@ -155,3 +155,50 @@ test('reports a missing Git dependency distinctly', () => {
 test('rejects unsupported options as usage errors', () => {
     expect(check('--unknown').status).toBe(2)
 })
+
+test('fails closed when a document is replaced with a symlink before reading', () => {
+    const external = fs.mkdtempSync(path.join(os.tmpdir(), 'external-public-docs-'))
+    try {
+        const target = path.join(external, 'private.txt')
+        fs.writeFileSync(target, 'Outside target must never be read\n')
+        write('README.md', 'Use sandbox\n')
+        git('add', 'README.md')
+        const preload = path.join(root, 'replace-document.cjs')
+        fs.writeFileSync(
+            preload,
+            `
+            const fs = require('fs')
+            const open = fs.openSync
+            const read = fs.readFileSync
+            let replaced = false
+            function replace(file) {
+                if (file !== 'README.md' || replaced) return
+                replaced = true
+                fs.unlinkSync(file)
+                fs.symlinkSync(process.env.PUBLIC_GUARD_TEST_TARGET, file)
+            }
+            fs.openSync = (file, ...args) => {replace(file); return open(file, ...args)}
+            fs.readFileSync = (file, ...args) => {replace(file); return read(file, ...args)}
+        `
+        )
+        const result = spawnSync(process.execPath, ['--require', preload, SCRIPT], {
+            cwd: root,
+            env: {...environment, PUBLIC_GUARD_TEST_TARGET: target},
+            encoding: 'utf8'
+        })
+        expect(result.status).toBe(1)
+        expect(result.stdout).not.toContain('passed')
+        expect(result.stderr).toContain('ELOOP')
+        expect(result.stderr).not.toContain('Outside target')
+    } finally {
+        fs.rmSync(external, {recursive: true, force: true})
+    }
+})
+
+test('continues to skip a tracked document removed from the working tree', () => {
+    write('README.md', 'Use sandbox\n')
+    git('add', 'README.md')
+    fs.unlinkSync(path.join(root, 'README.md'))
+    expect(check().status).toBe(0)
+    expect(check('--staged').status).toBe(0)
+})

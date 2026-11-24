@@ -30,6 +30,8 @@ Check tracked Markdown and deployment CLI source for recognizable installation I
 Run from the repository root. Requires Node.js and Git; no npm dependencies.
 Use portable placeholders in public examples. Diagnostics omit matched values.
 This format check supplements review of arbitrary site names and other identifiers.
+Regular-file reads require no-follow opens; use --staged if unavailable.
+Use --staged when parent directories can be replaced concurrently.
 
 Options:
   --staged    read the index instead of working-tree contents
@@ -52,6 +54,29 @@ function redact(text) {
         (result, rule) => result.replace(new RegExp(rule.pattern.source, 'gi'), '<redacted>'),
         text
     )
+}
+
+function readWorkingTree(file) {
+    try {
+        return fs.readlinkSync(file)
+    } catch (error) {
+        if (error.code !== 'EINVAL') throw error
+    }
+    if (!Number.isInteger(fs.constants.O_NOFOLLOW) || !Number.isInteger(fs.constants.O_NONBLOCK)) {
+        throw Object.assign(new Error('Required file-open flags unavailable; use --staged'), {
+            exitCode: EXIT.USAGE
+        })
+    }
+    const descriptor = fs.openSync(
+        file,
+        fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK
+    )
+    try {
+        if (!fs.fstatSync(descriptor).isFile()) throw new Error('Unsupported public file type')
+        return fs.readFileSync(descriptor, 'utf8')
+    } finally {
+        fs.closeSync(descriptor)
+    }
 }
 
 function main() {
@@ -83,9 +108,7 @@ function main() {
             if (values.staged) {
                 content = git(['show', `:${file}`])
             } else {
-                content = fs.lstatSync(file).isSymbolicLink()
-                    ? fs.readlinkSync(file)
-                    : fs.readFileSync(file, 'utf8')
+                content = readWorkingTree(file)
             }
         } catch (error) {
             if (!values.staged && error.code === 'ENOENT') continue
