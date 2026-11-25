@@ -13,15 +13,18 @@ const ROOT = path.resolve(__dirname, '..')
 const DEFAULT_CARTRIDGE = 'app_pwakit_base'
 const LOCAL_HOOKS_CARTRIDGE = 'int_pwakit_hooks'
 const CARTRIDGES = [DEFAULT_CARTRIDGE, LOCAL_HOOKS_CARTRIDGE]
+const ALL_CARTRIDGES = 'all'
+const CARTRIDGE_SELECTIONS = [...CARTRIDGES, ALL_CARTRIDGES]
 const EXIT = Object.freeze({RUNTIME: 1, USAGE: 2, DEPENDENCY: 3})
 const CONNECTION_OPTIONS = ['instance', 'config', 'server', 'webdav-server', 'certificate']
 const USAGE = `Usage: npm run deploy:cartridge -- [options]
 
-Upload a selected cartridge from this project or its installed extensibility template.
+Upload a selected cartridge, or both with --cartridge all, from this project
+or its installed extensibility template.
 Requires the b2c CLI (npm install --global @salesforce/b2c-cli) for upload.
 
 Options:
-  -c, --cartridge <name>     ${CARTRIDGES.join(' or ')} (default: ${DEFAULT_CARTRIDGE})
+  -c, --cartridge <name>     ${CARTRIDGE_SELECTIONS.join(', ')} (default: ${DEFAULT_CARTRIDGE})
   -v, --code-version <name>  code version to upload to (or exported SFCC_CODE_VERSION)
   -i, --instance <name>      named B2C CLI connection, e.g. sandbox or staging
   -C, --config <path>        B2C CLI connection file, in dw.json format
@@ -57,6 +60,14 @@ Authentication:
   For matching native inspection, use the same config/instance and map the
   selected WebDAV aliases to SFCC_USERNAME/SFCC_PASSWORD explicitly.
   Ignored local connection and env files are not copied into Git worktrees.
+
+Batch uploads:
+  --cartridge all resolves both sources and completes both configured preflights
+  before either upload. Uploads run sequentially; failure stops the remaining work.
+  --activate/--reload applies only to the final upload, after earlier success.
+  Uploads are not atomic: completed uploads remain if a later step fails.
+  Single-cartridge dry-run JSON uses source/command; all uses cartridges/sources
+  and commands in upload order, with finalization on the last command only.
 
 Upload alone does not import metadata, change site cartridge paths, or enable mail.
 Activation/reload requires the API credentials and permissions documented by b2c.
@@ -187,43 +198,88 @@ function main() {
     if (!version?.trim()) fail(EXIT.USAGE, 'provide --code-version or SFCC_CODE_VERSION')
     if (values.activate && values.reload) fail(EXIT.USAGE, 'choose either --activate or --reload')
 
-    const cartridge = values.cartridge || DEFAULT_CARTRIDGE
-    if (!CARTRIDGES.includes(cartridge)) {
-        fail(EXIT.USAGE, `--cartridge must be ${CARTRIDGES.join(' or ')}`)
+    const selection = values.cartridge || DEFAULT_CARTRIDGE
+    if (!CARTRIDGE_SELECTIONS.includes(selection)) {
+        fail(EXIT.USAGE, `--cartridge must be ${CARTRIDGE_SELECTIONS.join(' or ')}`)
     }
 
     const auth = authentication(values.instance || process.env.SFCC_INSTANCE)
-    const source = resolveSource(cartridge)
-    runPreflight(cartridge, source)
-    const args = ['code', 'deploy', source, '--cartridge', cartridge, '--code-version', version]
-    for (const name of CONNECTION_OPTIONS) {
-        if (values[name]) args.push(`--${name}`, values[name])
-    }
-    if (values.activate) args.push('--activate')
-    if (values.reload) args.push('--reload')
+    const cartridges = selection === ALL_CARTRIDGES ? CARTRIDGES : [selection]
+    const sources = cartridges.map(resolveSource)
+    sources.forEach((source, index) => runPreflight(cartridges[index], source))
+    const commands = cartridges.map((cartridge, index) => {
+        const args = [
+            'code',
+            'deploy',
+            sources[index],
+            '--cartridge',
+            cartridge,
+            '--code-version',
+            version
+        ]
+        for (const name of CONNECTION_OPTIONS) {
+            if (values[name]) args.push(`--${name}`, values[name])
+        }
+        if (index === cartridges.length - 1) {
+            if (values.activate) args.push('--activate')
+            if (values.reload) args.push('--reload')
+        }
+        return args
+    })
     if (values['dry-run']) {
-        process.stdout.write(
-            `${JSON.stringify(
-                {source, authentication: auth.source, command: ['b2c', ...args], cwd: ROOT},
-                null,
-                2
-            )}\n`
-        )
+        const plan =
+            selection === ALL_CARTRIDGES
+                ? {
+                      cartridges,
+                      sources,
+                      authentication: auth.source,
+                      commands: commands.map((args) => ['b2c', ...args]),
+                      cwd: ROOT
+                  }
+                : {
+                      source: sources[0],
+                      authentication: auth.source,
+                      command: ['b2c', ...commands[0]],
+                      cwd: ROOT
+                  }
+        process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`)
         return 0
     }
 
-    process.stderr.write(`deploy-cartridge: uploading ${cartridge} from ${source}\n`)
-    const result = spawnSync('b2c', args, {cwd: ROOT, env: auth.env, stdio: 'inherit'})
-    if (result.error?.code === 'ENOENT') {
-        fail(
-            EXIT.DEPENDENCY,
-            'b2c is missing; install it with npm install --global @salesforce/b2c-cli'
-        )
+    for (let index = 0; index < cartridges.length; index++) {
+        const cartridge = cartridges[index]
+        const previous = index > 0 ? 'Earlier uploads completed; ' : ''
+        const failureContext =
+            cartridges.length > 1
+                ? `${previous}deployment stopped at ${cartridge}; remaining uploads skipped; check remote state before retrying. `
+                : ''
+        process.stderr.write(`deploy-cartridge: uploading ${cartridge} from ${sources[index]}\n`)
+        const result = spawnSync('b2c', commands[index], {
+            cwd: ROOT,
+            env: auth.env,
+            stdio: 'inherit'
+        })
+        if (result.error?.code === 'ENOENT') {
+            fail(
+                EXIT.DEPENDENCY,
+                failureContext +
+                    'b2c is missing; install it with npm install --global @salesforce/b2c-cli'
+            )
+        }
+        if (result.error) fail(EXIT.RUNTIME, failureContext + result.error.message)
+        if (result.signal) {
+            fail(
+                EXIT.RUNTIME,
+                failureContext +
+                    `b2c terminated by ${result.signal}; check upload state before retrying`
+            )
+        }
+        if (result.status !== 0) {
+            if (failureContext) process.stderr.write(`deploy-cartridge: ${failureContext}\n`)
+            return result.status ?? EXIT.RUNTIME
+        }
     }
-    if (result.error) fail(EXIT.RUNTIME, result.error.message)
-    if (result.signal)
-        fail(EXIT.RUNTIME, `b2c terminated by ${result.signal}; check upload state before retrying`)
-    return result.status
+    return 0
 }
 
 try {

@@ -89,7 +89,11 @@ Retail React App 11's callback email delivery uses the `app_pwakit_base` cartrid
 
 ## B2C cartridge upload
 
-`npm run deploy:cartridge` uploads one selected cartridge using the installed [B2C CLI](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/code.html). The default is `app_pwakit_base`: it uses `cartridges/app_pwakit_base` when present; otherwise, it resolves the cartridge inside the installed `ccExtensibility.extends` template. Select `--cartridge int_pwakit_hooks` to upload this project's [SCAPI hooks cartridge](cartridges/int_pwakit_hooks/README.md), which must exist locally. Run `npm ci` first for an extensibility project. A storefront build is not required.
+`npm run deploy:cartridge` uploads the selected cartridges using the installed [B2C CLI](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/code.html). The default is `app_pwakit_base`: it uses `cartridges/app_pwakit_base` when present; otherwise, it resolves the cartridge inside the installed `ccExtensibility.extends` template. Select `--cartridge int_pwakit_hooks` to upload this project's [SCAPI hooks cartridge](cartridges/int_pwakit_hooks/README.md), which must exist locally. Run `npm ci` first for an extensibility project. A storefront build is not required.
+
+Use `--cartridge all` to upload both `app_pwakit_base` and `int_pwakit_hooks` to the same explicit code version. The wrapper resolves both sources and completes both configured preflights before starting either upload. It then uploads sequentially from each resolved source, supporting an installed template base cartridge alongside local hooks. `--activate` or `--reload` is applied only to the final upload; the CLI performs it after that upload succeeds. A failure stops the remaining work and preserves the failing status. Uploads are not atomic: earlier successful uploads remain, and a failed step may have partially changed remote files. Inspect the remote code version before retrying.
+
+For `--cartridge all --dry-run`, JSON stdout contains `cartridges`, `sources`, `authentication`, `commands`, and `cwd`. The commands are ordered, with activation/reload only on the final command. Single-cartridge previews retain their existing `source` and `command` fields.
 
 Install the CLI with `npm install --global @salesforce/b2c-cli`. Configure named connections such as `sandbox` and `staging` using the CLI's project or shared `dw.json` configuration, with the appropriate hostname for each instance. Project connection files and P12/PFX files are ignored by Git. Keep certificate files and credentials in protected storage.
 
@@ -106,6 +110,8 @@ b2c setup inspect --instance sandbox
 npm run deploy:cartridge -- --instance sandbox --code-version version1 --dry-run
 npm run deploy:cartridge -- --instance sandbox --code-version version1
 npm run deploy:cartridge -- --instance staging --code-version version1
+npm run deploy:cartridge -- --cartridge all --instance staging --code-version version1 --dry-run
+npm run deploy:cartridge -- --cartridge all --instance staging --code-version version1
 npm run deploy:cartridge -- --cartridge int_pwakit_hooks --instance sandbox --code-version version1 --dry-run
 ```
 

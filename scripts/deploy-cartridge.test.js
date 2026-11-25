@@ -28,6 +28,12 @@ function run(args, overrides = {}) {
     })
 }
 
+function calls() {
+    return fs.existsSync(environment.CALLS_PATH)
+        ? JSON.parse(fs.readFileSync(environment.CALLS_PATH))
+        : []
+}
+
 function captured() {
     return JSON.parse(fs.readFileSync(environment.CAPTURE_PATH, 'utf8'))
 }
@@ -47,18 +53,25 @@ beforeEach(() => {
     delete environment.PWA_KIT_CARTRIDGE_PREFLIGHT
     environment.PATH = path.join(root, 'bin')
     environment.CAPTURE_PATH = path.join(root, 'capture.json')
+    environment.CALLS_PATH = path.join(root, 'calls.json')
     fs.writeFileSync(
         path.join(root, 'bin/b2c'),
         `#!${process.execPath}
 const fs = require('fs')
-fs.writeFileSync(process.env.CAPTURE_PATH, JSON.stringify({
+const captured = {
     args: process.argv.slice(2),
     cwd: process.cwd(),
     username: process.env.SFCC_USERNAME,
     password: process.env.SFCC_PASSWORD,
     certificate: process.env.SFCC_CERTIFICATE,
     passphrase: process.env.SFCC_CERTIFICATE_PASSPHRASE
-}))
+}
+fs.writeFileSync(process.env.CAPTURE_PATH, JSON.stringify(captured))
+const calls = fs.existsSync(process.env.CALLS_PATH) ? JSON.parse(fs.readFileSync(process.env.CALLS_PATH)) : []
+calls.push(captured)
+fs.writeFileSync(process.env.CALLS_PATH, JSON.stringify(calls))
+const selected = captured.args[captured.args.indexOf('--cartridge') + 1]
+if (process.env.B2C_FAIL_CARTRIDGE === selected) process.exit(17)
 process.stdout.write('cli-result\\n')
 process.stderr.write('cli-progress\\n')
 if (process.env.B2C_SIGNAL) process.kill(process.pid, 'SIGTERM')
@@ -371,11 +384,16 @@ function preflight() {
         executable,
         `#!${process.execPath}
 const fs = require('fs')
-fs.writeFileSync(process.env.PREFLIGHT_CAPTURE, JSON.stringify({
+const captured = {
     args: process.argv.slice(2),
     cwd: process.cwd(),
     uploaded: fs.existsSync(process.env.CAPTURE_PATH)
-}))
+}
+fs.writeFileSync(process.env.PREFLIGHT_CAPTURE, JSON.stringify(captured))
+const calls = fs.existsSync(process.env.PREFLIGHT_CALLS) ? JSON.parse(fs.readFileSync(process.env.PREFLIGHT_CALLS)) : []
+calls.push(captured)
+fs.writeFileSync(process.env.PREFLIGHT_CALLS, JSON.stringify(calls))
+if (process.env.PREFLIGHT_FAIL_CARTRIDGE === process.argv[process.argv.indexOf('--cartridge') + 1]) process.exit(4)
 process.stderr.write('preflight-diagnostic\\n')
 process.stdout.write('preflight-result\\n')
 if (process.env.PREFLIGHT_SIGNAL) process.kill(process.pid, 'SIGTERM')
@@ -385,7 +403,8 @@ else process.exit(Number(process.env.PREFLIGHT_EXIT || 0))
     )
     return {
         PWA_KIT_CARTRIDGE_PREFLIGHT: executable,
-        PREFLIGHT_CAPTURE: path.join(root, 'preflight.json')
+        PREFLIGHT_CAPTURE: path.join(root, 'preflight.json'),
+        PREFLIGHT_CALLS: path.join(root, 'preflight-calls.json')
     }
 }
 
@@ -475,4 +494,106 @@ test.each([[], ['--dry-run']])('reports an unconfigured preflight distinctly: %j
     expect(result.stderr).not.toContain('running preflight')
     expect(result.stderr).not.toContain('preflight passed')
     expect(result.stdout).not.toContain('preflight skipped')
+})
+
+const ALL_CARTRIDGES = ['app_pwakit_base', 'int_pwakit_hooks']
+const selectedCartridge = (call) => call.args[call.args.indexOf('--cartridge') + 1]
+const createBoth = () =>
+    ALL_CARTRIDGES.map((name) => cartridge(path.join(root, 'cartridges', name)))
+
+test.each([undefined, '--activate', '--reload'])(
+    'uploads both only after both preflights and finalizes once: %j',
+    (finalize) => {
+        const sources = createBoth()
+        const config = preflight()
+        const args = ['-c', 'all', '-v', 'reviewed', '-i', 'sandbox', '--server', 'sandbox.example']
+        if (finalize) args.push(finalize)
+        const result = run(args, {
+            ...config,
+            WEBDAV_USER_sandbox: 'fixture-user',
+            WEBDAV_PASS_sandbox: 'fixture-key'
+        })
+        expect(result.status).toBe(0)
+        const uploads = calls()
+        expect(uploads.map(selectedCartridge)).toEqual(ALL_CARTRIDGES)
+        expect(uploads.map((call) => call.args[2])).toEqual(sources)
+        expect(uploads[0].args).not.toEqual(expect.arrayContaining(['--activate']))
+        expect(uploads[0].args).not.toEqual(expect.arrayContaining(['--reload']))
+        expect(uploads.map((call) => call.username)).toEqual(['fixture-user', 'fixture-user'])
+        expect(uploads.map((call) => call.password)).toEqual(['fixture-key', 'fixture-key'])
+        expect(uploads[1].args.includes(finalize)).toBe(Boolean(finalize))
+        const checks = JSON.parse(fs.readFileSync(config.PREFLIGHT_CALLS))
+        expect(checks.map((call) => call.args[3])).toEqual(ALL_CARTRIDGES)
+        expect(checks.map((call) => call.uploaded)).toEqual([false, false])
+    }
+)
+
+test('blocks every upload when the second cartridge preflight fails', () => {
+    createBoth()
+    const config = preflight()
+    const result = run(['--cartridge=all', '-v', 'reviewed', '--activate'], {
+        ...config,
+        PREFLIGHT_FAIL_CARTRIDGE: 'int_pwakit_hooks'
+    })
+    expect(result.status).toBe(4)
+    expect(calls()).toEqual([])
+    expect(JSON.parse(fs.readFileSync(config.PREFLIGHT_CALLS))).toHaveLength(2)
+})
+
+test('resolves all sources before any preflight or upload', () => {
+    cartridge(path.join(root, 'cartridges/app_pwakit_base'))
+    const config = preflight()
+    const result = run(['-call', '-v', 'reviewed'], config)
+    expect(result.status).toBe(2)
+    expect(calls()).toEqual([])
+    expect(fs.existsSync(config.PREFLIGHT_CAPTURE)).toBe(false)
+})
+
+test('stops after the first failed upload without scheduling activation or reload', () => {
+    createBoth()
+    const result = run(['-c', 'all', '-v', 'reviewed', '--activate'], {
+        B2C_FAIL_CARTRIDGE: 'app_pwakit_base'
+    })
+    expect(result.status).toBe(17)
+    expect(calls().map(selectedCartridge)).toEqual(['app_pwakit_base'])
+    expect(calls()[0].args).not.toContain('--activate')
+    expect(result.stderr).toContain('remaining uploads skipped')
+})
+
+test('reports partial outcomes when the second upload fails', () => {
+    createBoth()
+    const result = run(['-c', 'all', '-v', 'reviewed'], {B2C_FAIL_CARTRIDGE: 'int_pwakit_hooks'})
+    expect(result.status).toBe(17)
+    expect(calls().map(selectedCartridge)).toEqual(ALL_CARTRIDGES)
+    expect(result.stderr).toContain('Earlier uploads completed')
+    expect(result.stderr).toContain('check remote state before retrying')
+})
+
+test('previews both commands with finalization only on the last command', () => {
+    const sources = createBoth()
+    const config = preflight()
+    const result = run(['-c', 'all', '-v', 'reviewed', '--reload', '--dry-run'], config)
+    expect(result.status).toBe(0)
+    const preview = JSON.parse(result.stdout)
+    expect(preview.cartridges).toEqual(ALL_CARTRIDGES)
+    expect(preview.sources).toEqual(sources)
+    expect(preview.commands.map((command) => command[3])).toEqual(sources)
+    expect(preview.commands[0]).not.toContain('--reload')
+    expect(preview.commands[1]).toContain('--reload')
+    expect(calls()).toEqual([])
+    expect(JSON.parse(fs.readFileSync(config.PREFLIGHT_CALLS))).toHaveLength(2)
+})
+
+test('uploads installed base and local hooks without a combined staging directory', () => {
+    const template = path.join(root, 'node_modules/fixture-template')
+    const base = cartridge(path.join(template, 'cartridges/app_pwakit_base'))
+    fs.writeFileSync(path.join(template, 'package.json'), '{"name":"fixture-template"}')
+    fs.writeFileSync(
+        path.join(root, 'package.json'),
+        '{"ccExtensibility":{"extends":"fixture-template"}}'
+    )
+    const hooks = cartridge(path.join(root, 'cartridges/int_pwakit_hooks'))
+    const result = run(['-c', 'all', '-v', 'reviewed'])
+    expect(result.status).toBe(0)
+    expect(calls().map((call) => call.args[2])).toEqual([base, hooks])
 })
